@@ -962,53 +962,103 @@ const SEED = {
 };
 
 // ── SUPABASE ──────────────────────────────────────
+function validateSupabaseInputs() {
+  if (!SB_URL || !SB_KEY) throw new Error('Please fill in both fields');
+  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SB_URL)) {
+    throw new Error('Project URL should look like https://abcdefgh.supabase.co with no trailing slash');
+  }
+  if (!SB_KEY.startsWith('eyJ')) {
+    throw new Error('Anon key should be the long public key that starts with eyJ');
+  }
+}
+
+function restUrl(table, params='') {
+  const cleanParams = (params || '').replace(/^\?/, '');
+  const hasOrder = /(^|&)order=/.test(cleanParams);
+  let query = cleanParams;
+  if (!hasOrder) query += (query ? '&' : '') + 'order=created_at.asc';
+  return `${SB_URL}/rest/v1/${table}${query ? '?' + query : ''}`;
+}
+
+async function parseSupabaseResponse(res) {
+  const text = await res.text();
+  let payload = null;
+  if (text) {
+    try { payload = JSON.parse(text); } catch { payload = text; }
+  }
+  if (!res.ok) {
+    const msg = payload?.message || payload?.hint || payload?.error || text || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return payload ?? [];
+}
+
 async function sb(method, table, body=null, id=null) {
-  const url = `${SB_URL}/rest/v1/${table}${id ? `?id=eq.${id}` : ''}`;
+  let endpoint = table;
+  if (id) endpoint += `${endpoint.includes('?') ? '&' : '?'}id=eq.${id}`;
   const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
   const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(url, opts);
-  if (!res.ok) { const e = await res.text(); throw new Error(e); }
-  return res.status === 204 ? [] : res.json();
+  const res = await fetch(`${SB_URL}/rest/v1/${endpoint}`, opts);
+  return parseSupabaseResponse(res);
 }
+
 async function sbGet(table, params='') {
-  const res = await fetch(`${SB_URL}/rest/v1/${table}?${params}&order=created_at.asc`, {
+  const res = await fetch(restUrl(table, params), {
     headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
   });
-  return res.json();
+  const data = await parseSupabaseResponse(res);
+  if (!Array.isArray(data)) throw new Error(data?.message || `Unexpected response from ${table}`);
+  return data;
 }
+
 async function sbPatch(table, id, body) {
-  return sb('PATCH', `${table}?id=eq.${id}`, body);
+  return sb('PATCH', table, body, id);
 }
+
 async function sbDelete(table, id) {
   const res = await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, {
     method: 'DELETE',
     headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
   });
-  return res.ok;
+  await parseSupabaseResponse(res);
+  return true;
 }
 
 // ── INIT ─────────────────────────────────────────
 async function connectSupabase() {
   SB_URL = document.getElementById('sbUrl').value.trim().replace(/\/$/, '');
   SB_KEY = document.getElementById('sbKey').value.trim();
-  if (!SB_URL || !SB_KEY) { showToast('Please fill in both fields'); return; }
   try {
+    validateSupabaseInputs();
     await sbGet('semesters', 'limit=1');
     localStorage.setItem('sb_url', SB_URL);
     localStorage.setItem('sb_key', SB_KEY);
     await launch();
-  } catch(e) { showToast('Connection failed — check your URL and key'); }
+  } catch(e) {
+    console.error('Supabase connection failed:', e);
+    showToast('Connection failed — ' + e.message);
+  }
 }
 
 async function launch() {
-  document.getElementById('setupScreen').style.display = 'none';
-  document.getElementById('topnav').style.display = 'flex';
-  document.getElementById('mainContent').style.display = 'block';
-  await loadAll();
-  if (!semesters.length) await seedData();
-  initDark();
-  nav('today');
+  try {
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('topnav').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'block';
+    await loadAll();
+    if (!semesters.length) await seedData();
+    initDark();
+    nav('today');
+  } catch(e) {
+    console.error('Dashboard launch failed:', e);
+    localStorage.removeItem('sb_url');
+    localStorage.removeItem('sb_key');
+    document.getElementById('topnav').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('setupScreen').style.display = 'flex';
+    showToast('Launch failed — ' + e.message);
+  }
 }
 
 async function loadAll() {
