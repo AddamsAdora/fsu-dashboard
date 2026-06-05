@@ -936,6 +936,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     </div>
     <div class="form-row"><div><label>Notes (optional)</label><textarea id="assignNotes" rows="2"></textarea></div></div>
     <div class="modal-footer">
+      <button class="btn btn-secondary" id="deleteAssignBtn" onclick="deleteAssignment()" style="display:none;margin-right:auto;color:#ef4444;border-color:rgba(239,68,68,.4)"><i class="ti ti-trash"></i> Delete</button>
       <button class="btn btn-secondary" onclick="closeModal('modalAssignment')">Cancel</button>
       <button class="btn btn-primary" onclick="saveAssignment()">Save</button>
     </div>
@@ -954,6 +955,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     </div>
     <div class="form-row"><div><label>URL (optional)</label><input type="url" id="readUrl" placeholder="https://..."></div></div>
     <div class="modal-footer">
+      <button class="btn btn-secondary" id="deleteReadBtn" onclick="deleteReading()" style="display:none;margin-right:auto;color:#ef4444;border-color:rgba(239,68,68,.4)"><i class="ti ti-trash"></i> Delete</button>
       <button class="btn btn-secondary" onclick="closeModal('modalReading')">Cancel</button>
       <button class="btn btn-primary" onclick="saveReading()">Save</button>
     </div>
@@ -973,6 +975,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <div class="form-row"><div><label>Body</label><textarea id="noteBody" rows="8" placeholder="Your notes…"></textarea></div></div>
     <div class="form-row"><div><label>Tags (comma-separated)</label><input type="text" id="noteTags" placeholder="cognition, proposal, week3"></div></div>
     <div class="modal-footer">
+      <button class="btn btn-secondary" id="deleteNoteBtn" onclick="deleteNote()" style="display:none;margin-right:auto;color:#ef4444;border-color:rgba(239,68,68,.4)"><i class="ti ti-trash"></i> Delete</button>
       <button class="btn btn-secondary" onclick="closeModal('modalNote')">Cancel</button>
       <button class="btn btn-primary" onclick="saveNote()">Save</button>
     </div>
@@ -1705,6 +1708,7 @@ function openAddAssignment() {
   document.getElementById('assignWeight').value = '';
   document.getElementById('assignNotes').value = '';
   document.getElementById('assignModalTitle').textContent = 'Add Assignment';
+  document.getElementById('deleteAssignBtn').style.display = 'none';
   const sel = document.getElementById('assignCourse');
   sel.innerHTML = courses.map(c => `<option value="${c.id}">${c.code}</option>`).join('');
   openModal('modalAssignment');
@@ -1719,6 +1723,7 @@ function editAssignment(id) {
   document.getElementById('assignWeight').value = a.weight || '';
   document.getElementById('assignNotes').value = a.notes || '';
   document.getElementById('assignModalTitle').textContent = 'Edit Assignment';
+  document.getElementById('deleteAssignBtn').style.display = 'inline-flex';
   const sel = document.getElementById('assignCourse');
   sel.innerHTML = courses.map(c => `<option value="${c.id}" ${c.id === a.course_id ? 'selected' : ''}>${c.code}</option>`).join('');
   document.getElementById('assignType').value = a.type || 'Assignment';
@@ -1741,6 +1746,19 @@ async function saveAssignment() {
   closeModal('modalAssignment');
   renderAssignments();
   showToast('Saved!');
+}
+
+async function deleteAssignment() {
+  const id = document.getElementById('editAssignId').value;
+  const a = assignments.find(x => x.id === id);
+  if (!id || !a) return;
+  if (!confirm(`Delete assignment “${a.name}”? This cannot be undone.`)) return;
+  const ok = await sbDelete('assignments', id);
+  if (!ok) { showToast('Delete failed'); return; }
+  assignments = assignments.filter(x => x.id !== id);
+  closeModal('modalAssignment');
+  renderAll();
+  showToast('Assignment deleted');
 }
 
 // ── READINGS ─────────────────────────────────────
@@ -1911,6 +1929,7 @@ function openAddReading() {
   document.getElementById('readWeek').value = '';
   document.getElementById('readUrl').value = '';
   document.getElementById('readModalTitle').textContent = 'Add Reading';
+  document.getElementById('deleteReadBtn').style.display = 'none';
   document.getElementById('readCourse').innerHTML = courses.map(c => `<option value="${c.id}">${c.code}</option>`).join('');
   openModal('modalReading');
 }
@@ -1924,6 +1943,7 @@ function editReading(id) {
   document.getElementById('readWeek').value = r.week_label || '';
   document.getElementById('readUrl').value = r.url || '';
   document.getElementById('readModalTitle').textContent = 'Edit Reading';
+  document.getElementById('deleteReadBtn').style.display = 'inline-flex';
   document.getElementById('readCourse').innerHTML = courses.map(c => `<option value="${c.id}" ${c.id === r.course_id ? 'selected' : ''}>${c.code}</option>`).join('');
   openModal('modalReading');
 }
@@ -1943,6 +1963,19 @@ async function saveReading() {
   closeModal('modalReading');
   renderReadings();
   showToast('Saved!');
+}
+
+async function deleteReading() {
+  const id = document.getElementById('editReadId').value;
+  const r = readings.find(x => x.id === id);
+  if (!id || !r) return;
+  if (!confirm(`Delete reading “${r.title}”? This cannot be undone.`)) return;
+  const ok = await sbDelete('readings', id);
+  if (!ok) { showToast('Delete failed'); return; }
+  readings = readings.filter(x => x.id !== id);
+  closeModal('modalReading');
+  renderAll();
+  showToast('Reading deleted');
 }
 
 // ── TIMELINE ─────────────────────────────────────
@@ -2146,6 +2179,7 @@ function openAddNote() {
   document.getElementById('noteBody').value = '';
   document.getElementById('noteTags').value = '';
   document.getElementById('noteModalTitle').textContent = 'New Note';
+  document.getElementById('deleteNoteBtn').style.display = 'none';
   const nowStr = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' · ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   const timeEl = document.getElementById('noteModalTime');
   if (timeEl) timeEl.textContent = nowStr;
@@ -2164,6 +2198,7 @@ function editNote(id) {
   document.getElementById('noteBody').value = n.body;
   document.getElementById('noteTags').value = n.tags || '';
   document.getElementById('noteModalTitle').textContent = 'Edit Note';
+  document.getElementById('deleteNoteBtn').style.display = 'inline-flex';
   const timeEl = document.getElementById('noteModalTime');
   if (timeEl) {
     const dt = new Date(n.updated_at || n.created_at);
@@ -2194,6 +2229,20 @@ async function saveNote() {
   if (currentPage === 'notes') renderNotes();
   else { nav('notes'); }
   showToast('Note saved!');
+}
+
+async function deleteNote() {
+  const id = document.getElementById('editNoteId').value;
+  const n = notes.find(x => x.id === id);
+  if (!id || !n) return;
+  const label = n.title || 'Untitled note';
+  if (!confirm(`Delete note “${label}”? This cannot be undone.`)) return;
+  const ok = await sbDelete('notes', id);
+  if (!ok) { showToast('Delete failed'); return; }
+  notes = notes.filter(x => x.id !== id);
+  closeModal('modalNote');
+  renderAll();
+  showToast('Note deleted');
 }
 
 // ── APA BUILDER ──────────────────────────────────
