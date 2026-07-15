@@ -416,6 +416,9 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .reading-row:hover { background: #572932; }
 .reading-row:hover .reading-title { color: #DFD1A7; }
 .reading-row:hover .reading-citation { color: rgba(223,209,167,0.75); }
+[data-theme="light"] .reading-row:hover { background: rgba(206,184,136,0.4); }
+[data-theme="light"] .reading-row:hover .reading-title { color: #241016; }
+[data-theme="light"] .reading-row:hover .reading-citation { color: rgba(36,16,22,0.68); }
 .reading-text { flex: 1; }
 .reading-title { font-size: 13px; font-weight: 500; color: #ffffff; }
 .reading-citation { font-size: 11px; color: var(--text3); margin-top: 2px; }
@@ -448,6 +451,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .tbl td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
 .tbl tr:last-child td { border-bottom: none; }
 .tbl tr:hover td { background: #572932; color: #DFD1A7; }
+[data-theme="light"] .tbl tr:hover td { background: rgba(206,184,136,0.4); color: #241016; }
 .completed-row td { opacity: .45; }
 .completed-row td .dl-name { text-decoration: line-through; }
 
