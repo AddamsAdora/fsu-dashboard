@@ -27,11 +27,11 @@
   --gold:       #CEB888;   /* FSU Gold */
   --sands:      #DFD1A7;   /* FSU Gulf Sands — official Gold-family secondary */
   --stadium:    #101820;   /* FSU Stadium Night — official black */
-  --surface:    rgba(255,255,255,0.09);
-  --surface2:   rgba(255,255,255,0.14);
-  --surface3:   rgba(255,255,255,0.19);
-  --border:     rgba(255,255,255,0.18);
-  --border2:    rgba(255,255,255,0.28);
+  --surface:    #100a0c;
+  --surface2:   #1a1114;
+  --surface3:   #241a1d;
+  --border:     rgba(255,255,255,0.14);
+  --border2:    rgba(255,255,255,0.24);
   --text:       #f0eaf4;
   --text2:      rgba(240,234,244,0.65);
   --text3:      rgba(240,234,244,0.38);
@@ -60,7 +60,7 @@
 
 body {
   font-family: 'Barlow', sans-serif;
-  background: #101820;
+  background: #1a0b0e;
   color: var(--text);
   min-height: 100vh;
   font-size: 14px;
@@ -72,11 +72,11 @@ body::before {
   content: '';
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(120,47,64,0.5) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 50% at 100% 0%,  rgba(87,41,50,0.46)  0%, transparent 50%),
-    radial-gradient(ellipse 60% 50% at 100% 100%,rgba(206,184,136,0.16) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 40% at 0% 100%,  rgba(16,24,32,0.6)   0%, transparent 50%),
-    #101820;
+    radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(120,47,64,0.65) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%,  rgba(87,41,50,0.5)  0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 100% 100%,rgba(206,184,136,0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 0% 100%,  rgba(16,10,12,0.7)   0%, transparent 50%),
+    #1a0b0e;
 }
 
 [data-theme="light"] body::before {
@@ -93,7 +93,7 @@ body::before {
 /* ── TOP NAV ── */
 .topnav {
   position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
-  background: linear-gradient(90deg, #101820 0%, #3a1620 60%, #572932 100%);
+  background: linear-gradient(90deg, #12070a 0%, #3a1620 60%, #572932 100%);
   display: flex; align-items: center; padding: 0 20px;
   z-index: 200; gap: 8px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -143,7 +143,7 @@ body::before {
 .drawer-overlay.open { display: block; }
 .drawer {
   position: fixed; top: 0; left: -280px; bottom: 0; width: 260px;
-  background: linear-gradient(180deg, #101820 0%, #572932 100%); border-right: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(180deg, #12070a 0%, #572932 100%); border-right: 1px solid rgba(255,255,255,0.1);
   z-index: 310; transition: left .25s cubic-bezier(.19,1,.22,1);
   display: flex; flex-direction: column; padding: 20px 0;
 }
@@ -221,7 +221,7 @@ input:checked + .toggle-track:before { transform: translateX(18px); }
   background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
 }
 .course-card.c-garnet { background: linear-gradient(135deg, #2b1119 0%, #572932 55%, #782F40 100%); }
-.course-card.c-gold   { background: linear-gradient(135deg, #101820 0%, #8e7a45 55%, #CEB888 100%); }
+.course-card.c-gold   { background: linear-gradient(135deg, #14100a 0%, #8e7a45 55%, #CEB888 100%); }
 .course-card.c-blue   { background: linear-gradient(135deg, #1c2830 0%, #314a56 55%, #5f7d89 100%); }
 .course-code { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: rgba(255,255,255,0.55); }
 .course-name { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; margin: 6px 0 14px; line-height: 1.25; text-transform: uppercase; letter-spacing: .3px; }
@@ -276,16 +276,22 @@ input:checked + .toggle-track:before { transform: translateX(18px); }
 }
 .filter-btn:hover { border-color: var(--pink); color: var(--pink); }
 .filter-btn.active { background: var(--pink-glow); border-color: var(--pink); color: var(--pink); }
+.filter-btn.fb-garnet { border-color: rgba(120,47,64,0.55); color: #b5828d; }
 .filter-btn.fb-garnet:hover,
-.filter-btn.fb-garnet.active { background: rgba(120,47,64,0.16); border-color: #782F40; color: #782F40; }
+.filter-btn.fb-garnet.active { background: rgba(120,47,64,0.22); border-color: #782F40; color: #e3aab5; }
+.filter-btn.fb-gold { border-color: rgba(206,184,136,0.55); color: #CEB888; }
 .filter-btn.fb-gold:hover,
-.filter-btn.fb-gold.active { background: rgba(206,184,136,0.22); border-color: #8a6a1e; color: #8a6a1e; }
+.filter-btn.fb-gold.active { background: rgba(206,184,136,0.24); border-color: #CEB888; color: #f0e2c4; }
+.filter-btn.fb-blue { border-color: rgba(66,85,99,0.7); color: #93aab8; }
 .filter-btn.fb-blue:hover,
-.filter-btn.fb-blue.active { background: rgba(66,85,99,0.2); border-color: #425563; color: #425563; }
+.filter-btn.fb-blue.active { background: rgba(66,85,99,0.28); border-color: #6c8194; color: #c2d2db; }
+[data-theme="light"] .filter-btn.fb-garnet { color: #782F40; }
 [data-theme="light"] .filter-btn.fb-garnet:hover,
 [data-theme="light"] .filter-btn.fb-garnet.active { color: #572932; }
+[data-theme="light"] .filter-btn.fb-gold { color: #8a6a1e; border-color: rgba(184,135,46,0.6); }
 [data-theme="light"] .filter-btn.fb-gold:hover,
 [data-theme="light"] .filter-btn.fb-gold.active { color: #6b4e12; background: rgba(184,135,46,0.22); }
+[data-theme="light"] .filter-btn.fb-blue { color: #425563; }
 [data-theme="light"] .filter-btn.fb-blue:hover,
 [data-theme="light"] .filter-btn.fb-blue.active { color: #2e3943; }
 
@@ -296,7 +302,7 @@ input:checked + .toggle-track:before { transform: translateX(18px); }
 .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
 .btn-secondary:hover { border-color: var(--pink); color: var(--pink); }
 .btn-gold { background: var(--gold); color: #1a0820; }
-.btn-gold:hover { background: #e8a020; }
+.btn-gold:hover { background: #dcc79c; }
 .btn-sm { padding: 4px 10px; font-size: 11px; }
 .btn-icon { padding: 6px; }
 
@@ -309,7 +315,7 @@ input, textarea, select {
   transition: border-color .12s;
 }
 input:focus, textarea:focus, select:focus { outline: none; border-color: var(--pink); }
-option { background: #130920; }
+option { background: #180b0f; }
 .form-row { display: grid; gap: 12px; margin-bottom: 12px; }
 .form-row.cols2 { grid-template-columns: 1fr 1fr; }
 .form-row.cols3 { grid-template-columns: 1fr 1fr 1fr; }
@@ -318,7 +324,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 /* ── MODAL ── */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 400; align-items: center; justify-content: center; padding: 20px; }
 .modal-overlay.open { display: flex; }
-.modal { background: #130920; border: 1px solid var(--border2); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+.modal { background: #180b0f; border: 1px solid var(--border2); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
 .modal h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; letter-spacing: .5px; }
 .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
@@ -339,7 +345,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 
 /* ── TODAY HERO ── */
 .today-hero {
-  background: linear-gradient(135deg, #2a0040 0%, #7a0060 35%, #c01850 65%, #d05010 85%, var(--gold) 100%);
+  background: linear-gradient(135deg, #2b1119 0%, #572932 40%, #782F40 75%, #8a3d51 100%);
   border-radius: var(--radius-lg); padding: 26px; color: #fff; margin-bottom: 18px;
   position: relative; overflow: hidden;
   border: 1px solid rgba(255,255,255,0.1);
