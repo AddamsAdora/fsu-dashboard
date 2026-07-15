@@ -13,13 +13,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400;1,700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
 :root {
-  --pink:       #FF2D78;
-  --pink-dim:   #cc1f5e;
-  --pink-glow:  rgba(255,45,120,0.18);
-  --teal:       #00C9A7;
-  --teal-dim:   #009e85;
-  --teal-glow:  rgba(0,201,167,0.15);
-  --gold:       #FFB830;
+  /* FSU official brand colors — brand.fsu.edu/visual-style
+     Garnet and Gold are fixed brand colors and do not change between
+     light/dark mode. Garnet is never lightened; Gold is never darkened.
+     Day vs. night is expressed through which one dominates the chrome
+     (nav/hero/surfaces), not by altering the swatches themselves. */
+  --pink:       #782F40;   /* FSU Garnet */
+  --pink-dim:   #572932;   /* FSU Plaza Brick — official Garnet-family secondary */
+  --pink-glow:  rgba(120,47,64,0.22);
+  --teal:       #425563;   /* FSU Legacy Blue — official accent color (3rd course) */
+  --teal-dim:   #2e3943;
+  --teal-glow:  rgba(66,85,99,0.18);
+  --gold:       #CEB888;   /* FSU Gold */
+  --sands:      #DFD1A7;   /* FSU Gulf Sands — official Gold-family secondary */
+  --stadium:    #101820;   /* FSU Stadium Night — official black */
   --surface:    rgba(255,255,255,0.05);
   --surface2:   rgba(255,255,255,0.08);
   --surface3:   rgba(255,255,255,0.12);
@@ -34,30 +41,26 @@
   --nav-h:      58px;
 }
 
-/* light mode — bright pink/purple theme, intentionally cheerful and readable */
+/* light mode (day view) — FSU Gold dominates the chrome/surfaces;
+   Garnet remains the text/link accent since Garnet-on-white passes
+   FSU's own accessibility chart (Gold text does not, so we never use
+   gold as a text color — only as a background). */
 [data-theme="light"] {
-  --pink:       #D41472;
-  --pink-dim:   #A80F59;
-  --pink-glow:  rgba(212,20,114,0.18);
-  --teal:       #008F8A;
-  --teal-dim:   #006D69;
-  --teal-glow:  rgba(0,143,138,0.14);
-  --gold:       #C88719;
-  --surface:    rgba(255,255,255,0.78);
-  --surface2:   rgba(255,255,255,0.92);
-  --surface3:   rgba(212,20,114,0.10);
-  --border:     rgba(111,28,92,0.18);
-  --border2:    rgba(111,28,92,0.30);
-  --text:       #241126;
-  --text2:      rgba(36,17,38,0.72);
-  --text3:      rgba(36,17,38,0.48);
+  --surface:    rgba(87,41,50,0.05);
+  --surface2:   rgba(87,41,50,0.07);
+  --surface3:   rgba(87,41,50,0.11);
+  --border:     rgba(87,41,50,0.14);
+  --border2:    rgba(87,41,50,0.24);
+  --text:       #241016;
+  --text2:      rgba(36,16,22,0.68);
+  --text3:      rgba(36,16,22,0.44);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: 'Barlow', sans-serif;
-  background: #0d0618;
+  background: #101820;
   color: var(--text);
   min-height: 100vh;
   font-size: 14px;
@@ -69,28 +72,28 @@ body::before {
   content: '';
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(120,20,160,0.55) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 50% at 100% 0%,  rgba(180,20,80,0.4)  0%, transparent 50%),
-    radial-gradient(ellipse 60% 50% at 100% 100%,rgba(0,120,100,0.35) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 40% at 0% 100%,  rgba(20,20,80,0.5)   0%, transparent 50%),
-    #0d0618;
+    radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(120,47,64,0.5) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%,  rgba(87,41,50,0.46)  0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 100% 100%,rgba(206,184,136,0.16) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 0% 100%,  rgba(16,24,32,0.6)   0%, transparent 50%),
+    #101820;
 }
 
 [data-theme="light"] body::before {
   background:
-    radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(191,72,255,0.28) 0%, transparent 56%),
-    radial-gradient(ellipse 70% 50% at 100% 0%,  rgba(255,45,120,0.22) 0%, transparent 52%),
-    radial-gradient(ellipse 65% 50% at 100% 100%,rgba(0,201,167,0.16) 0%, transparent 56%),
-    radial-gradient(ellipse 50% 40% at 0% 100%,  rgba(255,184,48,0.16) 0%, transparent 50%),
-    #fff3fb;
+    radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(206,184,136,0.42) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%,  rgba(223,209,167,0.5) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 100% 100%,rgba(120,47,64,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 0% 100%,  rgba(206,184,136,0.22) 0%, transparent 50%),
+    #fbf7ef;
 }
 
-[data-theme="light"] body { background: #fff3fb; }
+[data-theme="light"] body { background: #fbf7ef; }
 
 /* ── TOP NAV ── */
 .topnav {
   position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
-  background: #0d0618;
+  background: linear-gradient(90deg, #101820 0%, #3a1620 60%, #572932 100%);
   display: flex; align-items: center; padding: 0 20px;
   z-index: 200; gap: 8px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -98,7 +101,7 @@ body::before {
 .topnav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
 .topnav-logo {
   width: 30px; height: 30px;
-  background: linear-gradient(135deg, var(--pink), var(--gold));
+  background: linear-gradient(135deg, #782F40, #CEB888);
   border-radius: 7px;
   display: flex; align-items: center; justify-content: center;
 }
@@ -108,7 +111,7 @@ body::before {
   font-size: 17px; font-weight: 700; color: var(--text);
   letter-spacing: .5px; text-transform: uppercase;
 }
-.topnav-title span { color: var(--pink); }
+.topnav-title span { color: var(--gold); }
 .topnav-links { display: flex; align-items: center; gap: 1px; margin-left: 20px; flex: 1; }
 .topnav-links a {
   padding: 5px 11px; border-radius: var(--radius-sm);
@@ -118,7 +121,7 @@ body::before {
   transition: background .12s, color .12s; white-space: nowrap;
 }
 .topnav-links a:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.topnav-links a.active { background: var(--pink-glow); color: var(--pink); }
+.topnav-links a.active { background: rgba(206,184,136,0.18); color: var(--gold); }
 .topnav-links a i { font-size: 15px; }
 .topnav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .dark-btn {
@@ -140,7 +143,7 @@ body::before {
 .drawer-overlay.open { display: block; }
 .drawer {
   position: fixed; top: 0; left: -280px; bottom: 0; width: 260px;
-  background: #0d0618; border-right: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(180deg, #101820 0%, #572932 100%); border-right: 1px solid rgba(255,255,255,0.1);
   z-index: 310; transition: left .25s cubic-bezier(.19,1,.22,1);
   display: flex; flex-direction: column; padding: 20px 0;
 }
@@ -148,7 +151,7 @@ body::before {
 .drawer-close { margin: 0 16px 16px; align-self: flex-start; width: 34px; height: 34px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; background: var(--surface); color: var(--text2); font-size: 17px; display: flex; align-items: center; justify-content: center; }
 .drawer-links a { display: flex; align-items: center; gap: 10px; padding: 11px 20px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 14px; font-weight: 500; transition: background .12s; }
 .drawer-links a:hover, .drawer-links a.active { background: var(--surface2); color: var(--text); }
-.drawer-links a.active { color: var(--pink); }
+.drawer-links a.active { color: var(--gold); }
 .drawer-links a i { font-size: 17px; }
 .drawer-sep { height: 1px; background: var(--border); margin: 10px 20px; }
 .drawer-dark { display: flex; align-items: center; gap: 10px; padding: 11px 20px; color: var(--text2); font-size: 14px; font-weight: 500; }
@@ -215,9 +218,9 @@ input:checked + .toggle-track:before { transform: translateX(18px); }
   width: 150px; height: 150px; border-radius: 50%;
   background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
 }
-.course-card.c-garnet { background: linear-gradient(135deg, #2a0040 0%, #7a0060 50%, var(--pink) 100%); }
-.course-card.c-gold   { background: linear-gradient(135deg, #0a1a30 0%, #003870 50%, #1060c0 100%); }
-.course-card.c-blue   { background: linear-gradient(135deg, #001a20 0%, #006050 50%, var(--teal) 100%); }
+.course-card.c-garnet { background: linear-gradient(135deg, #2b1119 0%, #572932 55%, #782F40 100%); }
+.course-card.c-gold   { background: linear-gradient(135deg, #101820 0%, #8e7a45 55%, #CEB888 100%); }
+.course-card.c-blue   { background: linear-gradient(135deg, #1c2830 0%, #314a56 55%, #5f7d89 100%); }
 .course-code { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: rgba(255,255,255,0.55); }
 .course-name { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; margin: 6px 0 14px; line-height: 1.25; text-transform: uppercase; letter-spacing: .3px; }
 .course-meta { font-size: 12px; color: rgba(255,255,255,0.75); display: flex; flex-direction: column; gap: 4px; }
@@ -255,9 +258,9 @@ input:checked + .toggle-track:before { transform: translateX(18px); }
 
 /* ── TAGS ── */
 .tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; width: fit-content; flex-shrink: 0; }
-.tag-garnet { background: rgba(255,45,120,0.2);  color: #ff6fa8;      border: 1px solid rgba(255,45,120,0.5); }
-.tag-gold   { background: rgba(30,130,255,0.2);  color: #70b8ff;      border: 1px solid rgba(30,130,255,0.5); }
-.tag-blue   { background: rgba(0,201,167,0.2);   color: #00d9b5;      border: 1px solid rgba(0,201,167,0.5); }
+.tag-garnet { background: rgba(120,47,64,0.22);   color: #d9a1ad;      border: 1px solid rgba(120,47,64,0.65); }
+.tag-gold   { background: rgba(206,184,136,0.22); color: #e8d9b4;      border: 1px solid rgba(206,184,136,0.65); }
+.tag-blue   { background: rgba(66,85,99,0.24);    color: #a9c1ca;      border: 1px solid rgba(66,85,99,0.6); }
 .tag-green  { background: rgba(34,197,94,0.12);  color: #4ade80;      border: 1px solid rgba(34,197,94,0.25); }
 .tag-gray   { background: var(--surface2);       color: var(--text3); border: 1px solid var(--border); }
 
@@ -307,7 +310,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 
 /* ── PROGRESS BARS ── */
 .progress-bar { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, var(--pink), var(--gold)); border-radius: 2px; transition: width .4s; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--pink), var(--teal)); border-radius: 2px; transition: width .4s; }
 
 /* ── WEEK CARD ── */
 .week-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; backdrop-filter: blur(8px); }
@@ -367,9 +370,9 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .note-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; cursor: pointer; transition: border-color .12s; backdrop-filter: blur(8px); }
 .note-card:hover { border-color: var(--border2); }
-.note-card.note-garnet { border-left: 3px solid var(--pink); }
-.note-card.note-gold   { border-left: 3px solid #60b0ff; }
-.note-card.note-blue   { border-left: 3px solid var(--teal); }
+.note-card.note-garnet { border-left: 3px solid #782F40; }
+.note-card.note-gold   { border-left: 3px solid #CEB888; }
+.note-card.note-blue   { border-left: 3px solid #425563; }
 .note-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
 .note-body { font-size: 12px; color: var(--text2); margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .note-footer { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
@@ -411,9 +414,9 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .check-circle { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .12s; flex-shrink: 0; background: transparent; }
 .check-circle:hover { border-color: var(--pink); }
 .check-circle.done { background: var(--pink); border-color: var(--pink); }
-.check-circle.done.cc-garnet { background: var(--pink);  border-color: var(--pink);  }
-.check-circle.done.cc-gold   { background: var(--gold);  border-color: var(--gold);  }
-.check-circle.done.cc-blue   { background: var(--teal);  border-color: var(--teal);  }
+.check-circle.done.cc-garnet { background: #782F40;  border-color: #782F40;  }
+.check-circle.done.cc-gold   { background: #CEB888;  border-color: #CEB888;  }
+.check-circle.done.cc-blue   { background: #425563;  border-color: #425563;  }
 .check-circle.done::after { content: ''; width: 5px; height: 9px; border: 2px solid #fff; border-top: none; border-left: none; transform: rotate(45deg) translate(-1px,-1px); display: block; }
 
 /* ── TABLES ── */
@@ -430,7 +433,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: #1a0828;
+  background: #1b1115;
   border: 1px solid var(--border2);
   color: #f0eaf4;
   padding: 10px 18px;
@@ -447,10 +450,10 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .toast.show { opacity: 1; transform: translateY(0); }
 
 [data-theme="light"] .toast {
-  background: linear-gradient(135deg, #D41472, #8B2BD9);
-  border-color: rgba(111,28,92,0.22);
+  background: linear-gradient(135deg, #572932, #782F40);
+  border-color: rgba(87,41,50,0.22);
   color: #ffffff;
-  box-shadow: 0 10px 28px rgba(212,20,114,0.28);
+  box-shadow: 0 10px 28px rgba(87,41,50,0.28);
 }
 
 /* ── CALLOUT ── */
@@ -471,42 +474,42 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .setup-field { text-align: left; margin-bottom: 14px; }
 
 
-/* ── LIGHT MODE: bright pink/purple variant ── */
+/* ── LIGHT MODE (DAY VIEW): FSU Gold dominates nav/hero/surfaces.
+   Per FSU's own accessibility chart, Gold text fails on every background,
+   so gold is used here only as a background — text stays dark or, for
+   large headings, Garnet. ── */
 [data-theme="light"] .topnav {
-  background: linear-gradient(90deg, #6f1c5c 0%, #b11268 55%, #d41472 100%);
-  border-bottom-color: rgba(111,28,92,0.22);
+  background: linear-gradient(90deg, #CEB888 0%, #DFD1A7 60%, #f2ead9 100%);
+  border-bottom-color: rgba(87,41,50,0.16);
 }
 [data-theme="light"] .drawer {
-  background: linear-gradient(180deg, #6f1c5c 0%, #9b1a73 100%);
-  border-right-color: rgba(111,28,92,0.24);
+  background: linear-gradient(180deg, #CEB888 0%, #DFD1A7 100%);
+  border-right-color: rgba(87,41,50,0.18);
 }
 [data-theme="light"] .drawer-links a,
-[data-theme="light"] .drawer-dark { color: rgba(255,255,255,0.78); }
+[data-theme="light"] .drawer-dark { color: rgba(36,16,22,0.78); }
 [data-theme="light"] .drawer-links a:hover,
-[data-theme="light"] .drawer-links a.active { background: rgba(255,255,255,0.14); color: #fff; }
-[data-theme="light"] .drawer-links a.active { color: #FFE0F0; }
-[data-theme="light"] .topnav-title,
-[data-theme="light"] .topnav-links a:hover { color: #fff; }
-[data-theme="light"] .topnav-title span { color: #FFE0F0; }
-[data-theme="light"] .topnav-links a { color: rgba(255,255,255,0.72); }
-[data-theme="light"] .topnav-links a.active { background: rgba(255,255,255,0.18); color: #fff; }
-[data-theme="light"] .topnav-logo,
-[data-theme="light"] .setup-card > div:first-child {
-  background: linear-gradient(135deg, #D41472, #8B2BD9, #FFB830) !important;
-}
+[data-theme="light"] .drawer-links a.active { background: rgba(120,47,64,0.85); color: #fff; }
+[data-theme="light"] .topnav-title { color: #241016; }
+[data-theme="light"] .topnav-links a:hover { color: #241016; background: rgba(87,41,50,0.1); }
+[data-theme="light"] .topnav-title span { color: #572932; }
+[data-theme="light"] .topnav-links a { color: rgba(36,16,22,0.7); }
+[data-theme="light"] .topnav-links a.active { background: rgba(120,47,64,0.85); color: #fff; }
 [data-theme="light"] .dark-btn,
 [data-theme="light"] .hamburger {
-  background: rgba(255,255,255,0.16);
-  border-color: rgba(255,255,255,0.24);
-  color: rgba(255,255,255,0.82);
+  background: rgba(87,41,50,0.1);
+  border-color: rgba(87,41,50,0.2);
+  color: #241016;
 }
 [data-theme="light"] .dark-btn:hover,
-[data-theme="light"] .hamburger:hover { color: #fff; background: rgba(255,255,255,0.24); }
+[data-theme="light"] .hamburger:hover { color: #241016; background: rgba(87,41,50,0.18); }
 [data-theme="light"] .today-hero {
-  background: linear-gradient(135deg, #7A1B8F 0%, #D41472 44%, #FF6AA2 72%, #FFB830 100%);
-  color: #fff;
-  box-shadow: 0 16px 40px rgba(212,20,114,0.18);
+  background: linear-gradient(135deg, #8a6a1e 0%, #CEB888 45%, #DFD1A7 100%);
+  color: #241016;
+  box-shadow: 0 16px 40px rgba(184,135,46,0.22);
 }
+[data-theme="light"] .today-hero h2 { color: #241016; }
+[data-theme="light"] .today-hero p { color: rgba(36,16,22,0.7); opacity: 1; }
 [data-theme="light"] .card,
 [data-theme="light"] .focus-item,
 [data-theme="light"] .week-card,
@@ -517,41 +520,35 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 [data-theme="light"] .stat-card,
 [data-theme="light"] .setup-card,
 [data-theme="light"] .modal {
-  background: rgba(255,255,255,0.78);
-  border-color: rgba(111,28,92,0.16);
-  box-shadow: 0 8px 28px rgba(111,28,92,0.08);
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(87,41,50,0.14);
+  box-shadow: 0 8px 28px rgba(184,135,46,0.10);
 }
-[data-theme="light"] .modal { background: #fff7fd; }
+[data-theme="light"] .modal { background: #fffdf8; }
 [data-theme="light"] input,
 [data-theme="light"] textarea,
 [data-theme="light"] select {
-  background: rgba(255,255,255,0.88);
+  background: rgba(255,255,255,0.92);
   color: var(--text);
-  border-color: rgba(111,28,92,0.22);
+  border-color: rgba(87,41,50,0.2);
 }
-[data-theme="light"] option { background: #fff7fd; color: var(--text); }
-[data-theme="light"] .section-title { color: rgba(36,17,38,0.58); }
+[data-theme="light"] option { background: #fffdf8; color: var(--text); }
+[data-theme="light"] .section-title { color: rgba(36,16,22,0.55); }
 [data-theme="light"] .focus-content strong,
 [data-theme="light"] .reading-title { color: var(--text); }
 [data-theme="light"] .focus-content span { color: var(--text2); }
-[data-theme="light"] .course-card.c-garnet { background: linear-gradient(135deg, #782F40 0%, #A84458 58%, #D41472 100%); }
-[data-theme="light"] .course-card.c-gold   { background: linear-gradient(135deg, #7A4E00 0%, #B8872E 60%, #CEB888 100%); }
-[data-theme="light"] .course-card.c-blue   { background: linear-gradient(135deg, #1E2B64 0%, #5D3AA8 54%, #8B2BD9 100%); }
-[data-theme="light"] .tag-garnet { background: rgba(212,20,114,0.12); color: #9B0F52; border-color: rgba(212,20,114,0.42); }
-[data-theme="light"] .tag-gold { background: rgba(200,135,25,0.16); color: #7A4E00; border-color: rgba(200,135,25,0.42); }
-[data-theme="light"] .tag-blue { background: rgba(139,43,217,0.12); color: #5D248D; border-color: rgba(139,43,217,0.36); }
-[data-theme="light"] .tag-gray { background: rgba(111,28,92,0.08); color: rgba(36,17,38,0.62); border-color: rgba(111,28,92,0.14); }
-[data-theme="light"] .progress-fill { background: linear-gradient(90deg, #D41472, #8B2BD9, #FFB830); }
-[data-theme="light"] .btn-primary { background: #D41472; color: #fff; }
-[data-theme="light"] .btn-primary:hover { background: #A80F59; }
-[data-theme="light"] .btn-secondary:hover,
-[data-theme="light"] .filter-btn:hover { border-color: #D41472; color: #D41472; }
-[data-theme="light"] .filter-btn.active { background: rgba(212,20,114,0.12); border-color: #D41472; color: #A80F59; }
+[data-theme="light"] .course-card.c-garnet { background: linear-gradient(135deg, #572932 0%, #782F40 60%, #8a3d51 100%); }
+[data-theme="light"] .course-card.c-gold   { background: linear-gradient(135deg, #6b4e12 0%, #a9822c 55%, #CEB888 100%); }
+[data-theme="light"] .course-card.c-blue   { background: linear-gradient(135deg, #2e3943 0%, #425563 55%, #6c8194 100%); }
+[data-theme="light"] .tag-garnet { background: rgba(120,47,64,0.12); color: #572932; border-color: rgba(120,47,64,0.4); }
+[data-theme="light"] .tag-gold { background: rgba(184,135,46,0.2); color: #6b4e12; border-color: rgba(184,135,46,0.48); }
+[data-theme="light"] .tag-blue { background: rgba(66,85,99,0.14); color: #2e3943; border-color: rgba(66,85,99,0.4); }
+[data-theme="light"] .tag-gray { background: rgba(87,41,50,0.07); color: rgba(36,16,22,0.6); border-color: rgba(87,41,50,0.14); }
 [data-theme="light"] .float-note,
 [data-theme="light"] #floatNoteBtn {
-  background: linear-gradient(135deg, #D41472, #8B2BD9) !important;
+  background: linear-gradient(135deg, #782F40, #CEB888) !important;
   color: #fff !important;
-  box-shadow: 0 8px 24px rgba(212,20,114,0.34) !important;
+  box-shadow: 0 8px 24px rgba(120,47,64,0.3) !important;
 }
 
 /* ── RESPONSIVE ── */
@@ -585,7 +582,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 <!-- SETUP SCREEN (shown until connected) -->
 <div id="setupScreen" class="setup-screen" style="display:none">
   <div class="setup-card">
-    <div style="width:52px;height:52px;background:linear-gradient(135deg,#FF2D78,#FFB830);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+    <div style="width:52px;height:52px;background:linear-gradient(135deg,#782F40,#CEB888);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
       <i class="ti ti-school" style="font-size:26px;color:#fff"></i>
     </div>
     <h1>FSU Ed.D. Dashboard</h1>
@@ -734,7 +731,13 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
       <div><h1>Assignments</h1><p>Track all coursework across every semester</p></div>
       <button class="btn btn-primary btn-sm" onclick="openAddAssignment()"><i class="ti ti-plus"></i> Add Assignment</button>
     </div>
-    <div class="filter-bar" id="assignFilter"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:2px">
+      <div class="filter-bar" id="assignFilter"></div>
+      <div class="filter-bar" id="assignUnitToggle" style="margin:0">
+        <button class="filter-btn" id="unitBtnPercent" onclick="setAssignUnit('percent')">%</button>
+        <button class="filter-btn" id="unitBtnPoints" onclick="setAssignUnit('points')">Points</button>
+      </div>
+    </div>
     <div class="card" style="padding:0;overflow:hidden">
       <table class="tbl" id="assignTable">
         <thead><tr>
@@ -742,7 +745,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
           <th>Assignment</th>
           <th class="hide-mobile">Course</th>
           <th class="hide-mobile">Due</th>
-          <th class="hide-mobile">Weight</th>
+          <th class="hide-mobile" id="assignWeightHeader">Weight</th>
           <th style="width:60px"></th>
         </tr></thead>
         <tbody id="assignBody"></tbody>
@@ -954,15 +957,41 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
         </select>
       </div>
     </div>
-    <div class="form-row cols2">
+    <div class="form-row cols3">
       <div><label>Due Date</label><input type="date" id="assignDue"></div>
       <div><label>Weight (%)</label><input type="number" id="assignWeight" placeholder="20"></div>
+      <div><label>Points</label><input type="number" id="assignPoints" placeholder="100"></div>
     </div>
     <div class="form-row"><div><label>Notes (optional)</label><textarea id="assignNotes" rows="2"></textarea></div></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" id="deleteAssignBtn" onclick="deleteAssignment()" style="display:none;margin-right:auto;color:#ef4444;border-color:rgba(239,68,68,.4)"><i class="ti ti-trash"></i> Delete</button>
       <button class="btn btn-secondary" onclick="closeModal('modalAssignment')">Cancel</button>
       <button class="btn btn-primary" onclick="saveAssignment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAssignmentNotes">
+  <div class="modal" style="max-width:560px">
+    <h2 id="assignNotesModalTitle" style="margin-bottom:2px">Assignment Notes</h2>
+    <p id="assignNotesModalSub" style="font-size:11px;color:var(--text3);margin-top:0;margin-bottom:16px"></p>
+    <div id="assignNotesList"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="assignNotesEditBtn" style="margin-right:auto"><i class="ti ti-pencil"></i> Edit Assignment</button>
+      <button class="btn btn-secondary" onclick="closeModal('modalAssignmentNotes')">Close</button>
+      <button class="btn btn-primary" id="assignNotesAddBtn"><i class="ti ti-plus"></i> Add Note</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalSyncReview">
+  <div class="modal" style="max-width:560px">
+    <h2 id="syncReviewTitle" style="margin-bottom:2px">Review items to add</h2>
+    <p id="syncReviewSub" style="font-size:12px;color:var(--text3);margin-top:0;margin-bottom:14px"></p>
+    <div id="syncReviewList" style="max-height:50vh;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalSyncReview')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmSyncReview()">Add Checked</button>
     </div>
   </div>
 </div>
@@ -991,6 +1020,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <h2 id="noteModalTitle">New Note</h2>
     <p id="noteModalTime" style="font-size:11px;color:var(--text3);margin-top:-14px;margin-bottom:16px"></p>
     <input type="hidden" id="editNoteId">
+    <input type="hidden" id="noteAssignId">
     <div class="form-row"><div><label>Title</label><input type="text" id="noteTitle" placeholder="Note title"></div></div>
     <div class="form-row cols2">
       <div><label>Course (optional)</label><select id="noteCourse"><option value="">— No course —</option></select></div>
@@ -1095,23 +1125,23 @@ const SEED = {
   assignments: [
     // EDF 5492 — Applied Research Methods
     // Module 1 (thru May 24)
-    { course_code:'EDF 5492', name:'Module 1 Discussion: Research Problems', due_date:'2026-05-22', weight:5, type:'Discussion', notes:'50 pts' },
+    { course_code:'EDF 5492', name:'Module 1 Discussion: Research Problems', due_date:'2026-05-22', weight:5, points:50, type:'Discussion', notes:'50 pts' },
     // Module 2: Research Design (May 25–June 7)
-    { course_code:'EDF 5492', name:'Module 2 Discussion: Research Design', due_date:'2026-06-05', weight:5, type:'Discussion', notes:'50 pts' },
-    { course_code:'EDF 5492', name:'Annotated Bibliography', due_date:'2026-06-07', weight:10, type:'Assignment', notes:'100 pts' },
+    { course_code:'EDF 5492', name:'Module 2 Discussion: Research Design', due_date:'2026-06-05', weight:5, points:50, type:'Discussion', notes:'50 pts' },
+    { course_code:'EDF 5492', name:'Annotated Bibliography', due_date:'2026-06-07', weight:10, points:100, type:'Assignment', notes:'100 pts' },
     // Module 3: Research Methods (June 8–21)
-    { course_code:'EDF 5492', name:'Module 3 Discussion: Research Methodologies', due_date:'2026-06-19', weight:5, type:'Discussion', notes:'50 pts' },
-    { course_code:'EDF 5492', name:'Proposal Outline', due_date:'2026-06-21', weight:5, type:'Assignment', notes:'50 pts' },
+    { course_code:'EDF 5492', name:'Module 3 Discussion: Research Methodologies', due_date:'2026-06-19', weight:5, points:50, type:'Discussion', notes:'50 pts' },
+    { course_code:'EDF 5492', name:'Proposal Outline', due_date:'2026-06-21', weight:5, points:50, type:'Assignment', notes:'50 pts' },
     // Module 4: Data Collection (June 22–July 5)
-    { course_code:'EDF 5492', name:'Module 4 Discussion: Data Collection', due_date:'2026-07-03', weight:5, type:'Discussion', notes:'50 pts' },
-    { course_code:'EDF 5492', name:'Glossary', due_date:'2026-07-05', weight:10, type:'Assignment', notes:'100 pts' },
-    { course_code:'EDF 5492', name:'Proposal Draft', due_date:'2026-07-19', weight:10, type:'Project', notes:'100 pts' },
+    { course_code:'EDF 5492', name:'Module 4 Discussion: Data Collection', due_date:'2026-07-03', weight:5, points:50, type:'Discussion', notes:'50 pts' },
+    { course_code:'EDF 5492', name:'Glossary', due_date:'2026-07-05', weight:10, points:100, type:'Assignment', notes:'100 pts' },
+    { course_code:'EDF 5492', name:'Proposal Draft', due_date:'2026-07-19', weight:10, points:100, type:'Project', notes:'100 pts' },
     // Module 5: Data Analysis (July 6–19)
-    { course_code:'EDF 5492', name:'Module 5 Discussion: Data Analysis', due_date:'2026-07-17', weight:5, type:'Discussion', notes:'50 pts' },
-    { course_code:'EDF 5492', name:'Proposal Presentation', due_date:'2026-07-26', weight:10, type:'Presentation', notes:'100 pts' },
+    { course_code:'EDF 5492', name:'Module 5 Discussion: Data Analysis', due_date:'2026-07-17', weight:5, points:50, type:'Discussion', notes:'50 pts' },
+    { course_code:'EDF 5492', name:'Proposal Presentation', due_date:'2026-07-26', weight:10, points:100, type:'Presentation', notes:'100 pts' },
     // Module 6: Research Ethics & Quality (July 20–31)
-    { course_code:'EDF 5492', name:'Module 6 Discussion: Research Ethics & Quality', due_date:'2026-07-31', weight:5, type:'Discussion', notes:'50 pts' },
-    { course_code:'EDF 5492', name:'Proposal Final Draft', due_date:'2026-07-31', weight:15, type:'Project', notes:'150 pts' },
+    { course_code:'EDF 5492', name:'Module 6 Discussion: Research Ethics & Quality', due_date:'2026-07-31', weight:5, points:50, type:'Discussion', notes:'50 pts' },
+    { course_code:'EDF 5492', name:'Proposal Final Draft', due_date:'2026-07-31', weight:15, points:150, type:'Project', notes:'150 pts' },
     // EDG 6362 — Instructional Systems Research Seminar
     { course_code:'EDG 6362', name:'Module 1 Discussion: History and Overview of the Field', due_date:'2026-05-17', weight:10, type:'Discussion', notes:'Due May 17 at 11:59pm' },
     { course_code:'EDG 6362', name:'Statement of Interests', due_date:'2026-05-17', weight:10, type:'Assignment', notes:'Due May 17 at 11:59pm' },
@@ -1121,7 +1151,9 @@ const SEED = {
     { course_code:'EDG 6362', name:'Research Conversation Activity - Annotated Bibliography', due_date:'2026-05-31', weight:15, type:'Assignment', notes:'Due May 31 at 11:59pm' },
     { course_code:'EDG 6362', name:'Week 3 Discussion: Reading Research (Topics 1–5)', due_date:'2026-06-07', weight:10, type:'Discussion', notes:'5 topics: What did you read, Conceptual Frameworks, Peer Review, Voice, APA Style' },
     { course_code:'EDG 6362', name:'Research Conversation Activity - Annotated Bibliography (2nd submission)', due_date:'2026-06-08', weight:15, type:'Assignment', notes:'Part 2 of Research Conversation Activity — due Sunday Week 3' },
-    { course_code:'EDG 6362', name:'Token 1', due_date:null, weight:0, type:'Assignment', notes:'Undated — flexibility token' },
+    { course_code:'EDG 6362', name:'Token #1', due_date:'2026-07-31', weight:null, type:'Assignment', notes:'Flexibility token' },
+    { course_code:'EDG 6362', name:'Token #2', due_date:'2026-07-31', weight:null, type:'Assignment', notes:'Flexibility token' },
+    { course_code:'EDG 6362', name:'Token #3', due_date:'2026-07-31', weight:null, type:'Assignment', notes:'Flexibility token' },
     // EME 6920
     { course_code:'EME 6920', name:'Citation Management Setup', due_date:'2026-05-20', weight:10, type:'Assignment' },
     { course_code:'EME 6920', name:'CITI Training Certificate', due_date:'2026-06-10', weight:20, type:'Assignment' },
@@ -1394,7 +1426,7 @@ function renderToday() {
   if (next) {
     const days = daysUntil(next.due_date);
     const c = courseById(next.course_id);
-    const color = days < 0 ? 'var(--pink)' : days <= 2 ? '#FFB830' : 'var(--teal)';
+    const color = days < 0 ? 'var(--pink)' : days <= 2 ? '#B8872E' : 'var(--teal)';
     const label = days < 0 ? `${Math.abs(days)}d overdue` : days === 0 ? 'due today' : days === 1 ? 'due tomorrow' : `${days} days`;
     cdEl.innerHTML = `
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:800;color:${color};line-height:1">${days < 0 ? '-' : ''}${Math.abs(days)}<span style="font-size:18px;font-weight:600;margin-left:4px">${days === 0 ? 'today' : 'd'}</span></div>
@@ -1461,9 +1493,9 @@ function renderToday() {
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${isToday ? 'var(--pink)' : isPast ? 'var(--text3)' : 'var(--text2)'};margin-bottom:4px">${d}</div>
       <div style="width:28px;height:28px;border-radius:50%;margin:0 auto;
         background:${isToday ? 'var(--pink)' : isPast ? 'var(--surface2)' : 'var(--surface)'};
-        border:1px solid ${isToday ? 'var(--pink)' : hasDue ? '#FFB830' : 'var(--border)'};
+        border:1px solid ${isToday ? 'var(--pink)' : hasDue ? '#B8872E' : 'var(--border)'};
         display:flex;align-items:center;justify-content:center">
-        ${hasDue ? `<div style="width:6px;height:6px;border-radius:50%;background:${isToday ? '#fff' : '#FFB830'}"></div>` : ''}
+        ${hasDue ? `<div style="width:6px;height:6px;border-radius:50%;background:${isToday ? '#fff' : '#B8872E'}"></div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1512,7 +1544,7 @@ function renderToday() {
     const daysStr = r._inferredDue < new Date('2098-01-01') ? (() => {
       const d = Math.ceil((r._inferredDue - now) / 86400000);
       return d < 0 ? `<span style="color:var(--pink);font-size:10px">overdue</span>` :
-             d === 0 ? `<span style="color:#FFB830;font-size:10px">today</span>` :
+             d === 0 ? `<span style="color:#B8872E;font-size:10px">today</span>` :
              `<span style="font-size:10px;color:var(--text3)">${d}d</span>`;
     })() : '';
     qHtml += `<div class="reading-row" style="padding:10px 18px;cursor:pointer" onclick="toggleReadingById('${r.id}')">
@@ -1634,7 +1666,7 @@ function renderDashboard() {
   let dlHtml = upcoming.map(a => {
     const c = courseById(a.course_id);
     const dot = urgencyDot(a.due_date);
-    const dotColor = c.color === 'gold' ? '#60b0ff' : c.color === 'blue' ? 'var(--teal)' : 'var(--pink)';
+    const dotColor = c.color === 'gold' ? '#CEB888' : c.color === 'blue' ? '#5f7d89' : '#782F40';
     return `<div class="deadline-item"><div class="dl-dot"></div><span class="dl-name">${a.name}</span>${courseTag(c)}<span class="dl-meta">${fmtDate(a.due_date)}</span></div>`.replace('class="dl-dot"', `class="dl-dot" style="background:${dotColor}"`);
   }).join('') || '<p style="color:var(--text3);font-size:13px;padding:8px 0">No upcoming deadlines</p>';
   document.getElementById('upcomingDeadlines').innerHTML = dlHtml;
@@ -1657,6 +1689,14 @@ function renderDashboard() {
 }
 
 // ── ASSIGNMENTS ──────────────────────────────────
+let assignUnit = localStorage.getItem('assign_unit') || 'percent';
+
+function setAssignUnit(unit) {
+  assignUnit = unit;
+  localStorage.setItem('assign_unit', unit);
+  renderAssignments();
+}
+
 function renderAssignments() {
   const semCourses = courses;
   const filterEl = document.getElementById('assignFilter');
@@ -1664,6 +1704,10 @@ function renderAssignments() {
   filterEl.innerHTML = filters.map(f =>
     `<button class="filter-btn ${f === 'All' ? (currentCourseFilter==='all'?'active':'') : (currentCourseFilter===f?'active':'')}" onclick="setAssignFilter('${f}')">${f}</button>`
   ).join('');
+
+  document.getElementById('unitBtnPercent').classList.toggle('active', assignUnit === 'percent');
+  document.getElementById('unitBtnPoints').classList.toggle('active', assignUnit === 'points');
+  document.getElementById('assignWeightHeader').textContent = assignUnit === 'points' ? 'Points' : 'Weight';
 
   let list = [...assignments];
   if (currentCourseFilter !== 'all') {
@@ -1680,14 +1724,23 @@ function renderAssignments() {
   const pending   = list.filter(a => !a.completed);
   const completed = list.filter(a => a.completed);
 
+  function unitCell(a) {
+    if (assignUnit === 'points') return (a.points || a.points === 0) ? a.points : '—';
+    return a.weight ? a.weight + '%' : '—';
+  }
+
   function assignRow(a) {
     const c = courseById(a.course_id);
+    const hasNotes = !!(a.notes && a.notes.trim()) || notes.some(n => n.assignment_id === a.id);
     return `<tr>
       <td><div class="check-circle ${a.completed ? 'done' : ''}" onclick="toggleAssign('${a.id}')"></div></td>
-      <td><span class="dl-name" style="${a.completed ? 'opacity:.55;text-decoration:line-through' : ''}">${a.name}</span></td>
+      <td>
+        <span class="dl-name" style="cursor:pointer;${a.completed ? 'opacity:.55;text-decoration:line-through' : ''}" onclick="openAssignmentNotes('${a.id}')">${a.name}</span>
+        ${hasNotes ? `<i class="ti ti-notes" title="Has notes" style="font-size:12px;color:var(--text3);margin-left:5px;cursor:pointer" onclick="openAssignmentNotes('${a.id}')"></i>` : ''}
+      </td>
       <td class="hide-mobile">${courseTag(c)}</td>
       <td class="hide-mobile" style="${a.completed ? 'opacity:.55' : ''}">${fmtDate(a.due_date)}</td>
-      <td class="hide-mobile" style="${a.completed ? 'opacity:.55' : ''}">${a.weight ? a.weight + '%' : '—'}</td>
+      <td class="hide-mobile" style="${a.completed ? 'opacity:.55' : ''}">${unitCell(a)}</td>
       <td><button class="btn btn-secondary btn-sm btn-icon" onclick="editAssignment('${a.id}')"><i class="ti ti-pencil"></i></button></td>
     </tr>`;
   }
@@ -1730,6 +1783,7 @@ function openAddAssignment() {
   document.getElementById('assignName').value = '';
   document.getElementById('assignDue').value = '';
   document.getElementById('assignWeight').value = '';
+  document.getElementById('assignPoints').value = '';
   document.getElementById('assignNotes').value = '';
   document.getElementById('assignModalTitle').textContent = 'Add Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'none';
@@ -1745,6 +1799,7 @@ function editAssignment(id) {
   document.getElementById('assignName').value = a.name;
   document.getElementById('assignDue').value = a.due_date || '';
   document.getElementById('assignWeight').value = a.weight || '';
+  document.getElementById('assignPoints').value = a.points || '';
   document.getElementById('assignNotes').value = a.notes || '';
   document.getElementById('assignModalTitle').textContent = 'Edit Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'inline-flex';
@@ -1762,6 +1817,7 @@ async function saveAssignment() {
     type: document.getElementById('assignType').value,
     due_date: document.getElementById('assignDue').value || null,
     weight: parseFloat(document.getElementById('assignWeight').value) || null,
+    points: parseFloat(document.getElementById('assignPoints').value) || null,
     notes: document.getElementById('assignNotes').value.trim()
   };
   if (!data.name) { showToast('Assignment name required'); return; }
@@ -2197,8 +2253,11 @@ function populateNoteModules(courseId, currentVal) {
   const mods = getModulesForCourse(courseId);
   sel.innerHTML = '<option value="">— Select —</option>' + mods.map(m => `<option value="${m}" ${m===currentVal?'selected':''}>${m}</option>`).join('');
 }
-function openAddNote() {
+let _noteReturnToAssignment = null;
+
+function openAddNote(prefillAssignmentId) {
   document.getElementById('editNoteId').value = '';
+  document.getElementById('noteAssignId').value = prefillAssignmentId || '';
   document.getElementById('noteTitle').value = '';
   document.getElementById('noteBody').value = '';
   document.getElementById('noteTags').value = '';
@@ -2209,8 +2268,20 @@ function openAddNote() {
   if (timeEl) timeEl.textContent = nowStr;
   const sel = document.getElementById('noteCourse');
   sel.innerHTML = '<option value="">— No course —</option>' + courses.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
+  let prefillCourseId = '';
+  if (prefillAssignmentId) {
+    const a = assignments.find(x => x.id === prefillAssignmentId);
+    if (a) {
+      prefillCourseId = a.course_id;
+      sel.value = a.course_id;
+      document.getElementById('noteTitle').value = a.name;
+      _noteReturnToAssignment = prefillAssignmentId;
+    }
+  } else {
+    _noteReturnToAssignment = null;
+  }
   sel.onchange = () => populateNoteModules(sel.value, '');
-  populateNoteModules('', '');
+  populateNoteModules(prefillCourseId, '');
   openModal('modalNote');
 }
 
@@ -2218,11 +2289,13 @@ function editNote(id) {
   const n = notes.find(x => x.id === id);
   if (!n) return;
   document.getElementById('editNoteId').value = id;
+  document.getElementById('noteAssignId').value = n.assignment_id || '';
   document.getElementById('noteTitle').value = n.title || '';
   document.getElementById('noteBody').value = n.body;
   document.getElementById('noteTags').value = n.tags || '';
   document.getElementById('noteModalTitle').textContent = 'Edit Note';
   document.getElementById('deleteNoteBtn').style.display = 'inline-flex';
+  _noteReturnToAssignment = n.assignment_id || null;
   const timeEl = document.getElementById('noteModalTime');
   if (timeEl) {
     const dt = new Date(n.updated_at || n.created_at);
@@ -2238,21 +2311,66 @@ function editNote(id) {
 async function saveNote() {
   const id = document.getElementById('editNoteId').value;
   const moduleEl = document.getElementById('noteModule');
+  const assignId = document.getElementById('noteAssignId').value || null;
   const data = {
     title: document.getElementById('noteTitle').value.trim(),
     body: document.getElementById('noteBody').value.trim(),
     course_id: document.getElementById('noteCourse').value || null,
     tags: document.getElementById('noteTags').value.trim(),
     module_label: moduleEl ? moduleEl.value : null,
+    assignment_id: assignId,
     updated_at: new Date().toISOString()
   };
   if (!data.body) { showToast('Note body required'); return; }
   if (id) { await sbPatch('notes', id, data); Object.assign(notes.find(n => n.id === id), data); }
   else { const r = await sb('POST', 'notes', data); notes.push(r[0]); }
   closeModal('modalNote');
-  if (currentPage === 'notes') renderNotes();
-  else { nav('notes'); }
+  if (_noteReturnToAssignment) {
+    renderAssignmentNotesList(_noteReturnToAssignment);
+  } else if (currentPage === 'notes') {
+    renderNotes();
+  } else {
+    nav('notes');
+  }
   showToast('Note saved!');
+}
+
+// ── ASSIGNMENT NOTES QUICK-VIEW ───────────────────
+function openAssignmentNotes(assignmentId) {
+  const a = assignments.find(x => x.id === assignmentId);
+  if (!a) return;
+  document.getElementById('assignNotesModalTitle').textContent = a.name;
+  const c = courseById(a.course_id);
+  document.getElementById('assignNotesModalSub').textContent = [c ? c.code : null, fmtDate(a.due_date)].filter(Boolean).join(' · ');
+  document.getElementById('assignNotesAddBtn').setAttribute('onclick', `openAddNote('${assignmentId}')`);
+  document.getElementById('assignNotesEditBtn').setAttribute('onclick', `editAssignment('${assignmentId}')`);
+  renderAssignmentNotesList(assignmentId);
+  openModal('modalAssignmentNotes');
+}
+
+function renderAssignmentNotesList(assignmentId) {
+  const a = assignments.find(x => x.id === assignmentId);
+  const wrap = document.getElementById('assignNotesList');
+  if (!wrap || !a) return;
+  const linked = notes.filter(n => n.assignment_id === assignmentId)
+    .sort((x,y) => new Date(y.updated_at || y.created_at) - new Date(x.updated_at || x.created_at));
+  let html = '';
+  if (a.notes) {
+    html += `<div class="card" style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:6px">From the assignment record</div>
+      <div style="font-size:13px;white-space:pre-wrap">${escHtml(a.notes)}</div>
+    </div>`;
+  }
+  if (linked.length) {
+    html += linked.map(n => `
+      <div class="card" style="margin-bottom:10px;cursor:pointer" onclick="closeModal('modalAssignmentNotes');editNote('${n.id}')">
+        ${n.title ? `<div style="font-weight:600;font-size:13px;margin-bottom:4px">${escHtml(n.title)}</div>` : ''}
+        <div style="font-size:13px;color:var(--text2);white-space:pre-wrap">${escHtml((n.body||'').slice(0,240))}${(n.body||'').length>240?'…':''}</div>
+      </div>`).join('');
+  } else if (!a.notes) {
+    html += `<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">No notes yet for this assignment.</div>`;
+  }
+  wrap.innerHTML = html;
 }
 
 async function deleteNote() {
@@ -2421,7 +2539,7 @@ function renderExport() {
     const cA = assignments.filter(a => a.course_id === c.id);
     const cDone = cA.filter(a => a.completed).length;
     return `<div style="margin-bottom:20px">
-      <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:#FF2D78">${c.code} — ${c.name}</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:#782F40">${c.code} — ${c.name}</div>
       <table class="tbl">
         <thead><tr><th>Assignment</th><th>Due</th><th>Status</th></tr></thead>
         <tbody>
@@ -2855,46 +2973,106 @@ async function confirmImport() {
 }
 
 // ── SYNC MISSING READINGS ────────────────────────
+// ── SYNC (reviews candidates before adding — see modalSyncReview) ──
+// NOTE: these buttons don't call the live Canvas API (no Canvas connection
+// exists here) — they compare your Supabase data against the SEED list
+// baked into this file. That's why a rename/retyped item in Canvas can
+// look "missing" even though you've already got it: matching is done by
+// name. To reduce false positives we now normalize names (case, spacing,
+// punctuation) before comparing, and — more importantly — show you the
+// candidates first instead of inserting them silently.
+function normalizeName(s) {
+  return (s || '')
+    .toLowerCase()
+    .replace(/[#.,:;'"()\-–—]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+let _syncCandidates = [];
+let _syncKind = '';
+
 async function syncMissingReadings() {
-  showToast('Checking for missing readings…');
-  let added = 0;
+  const candidates = [];
   for (const r of SEED.readings) {
     const c = courses.find(x => x.code === r.course_code);
     if (!c) continue;
-    const { course_code, ...rest } = r;
-    // Check if a reading with this exact title already exists for this course
-    const exists = readings.some(x => x.course_id === c.id && x.title === r.title);
-    if (!exists) {
-      const result = await sb('POST', 'readings', { ...rest, course_id: c.id, is_read: false });
-      readings.push(result[0]);
-      added++;
-    }
+    const norm = normalizeName(r.title);
+    const exists = readings.some(x => x.course_id === c.id && normalizeName(x.title) === norm);
+    if (!exists) candidates.push({ ...r, course_id: c.id, course_code: undefined });
   }
-  renderReadings();
-  showToast(added > 0 ? `Added ${added} new reading${added > 1 ? 's' : ''}!` : 'All readings already up to date.');
+  if (!candidates.length) { showToast('All readings already up to date.'); return; }
+  openSyncReview('readings', candidates);
 }
 
-// ── SYNC MISSING ASSIGNMENTS ────────────────────
 async function syncMissingAssignments() {
-  showToast("Checking for missing assignments…");
-  let added = 0;
+  const candidates = [];
   for (const a of SEED.assignments) {
     const c = courses.find(x => x.code === a.course_code);
     if (!c) continue;
-    const { course_code, ...rest } = a;
-    const exists = assignments.some(x => x.course_id === c.id && x.name === a.name);
-    if (!exists) {
-      const result = await sb("POST", "assignments", { ...rest, course_id: c.id, completed: false });
+    const norm = normalizeName(a.name);
+    const exists = assignments.some(x => x.course_id === c.id && normalizeName(x.name) === norm);
+    if (!exists) candidates.push({ ...a, course_id: c.id, course_code: undefined });
+  }
+  if (!candidates.length) { showToast('All assignments already up to date.'); return; }
+  openSyncReview('assignments', candidates);
+}
+
+function openSyncReview(kind, candidates) {
+  _syncKind = kind;
+  _syncCandidates = candidates.map(c => ({ ...c, _checked: true }));
+  document.getElementById('syncReviewTitle').textContent =
+    kind === 'assignments' ? 'Review assignments to add' : 'Review readings to add';
+  document.getElementById('syncReviewSub').textContent =
+    `Found ${candidates.length} item${candidates.length !== 1 ? 's' : ''} in the course list that don't match anything already in your ${kind}. Uncheck anything you've already got under a different name before adding.`;
+  renderSyncReviewList();
+  openModal('modalSyncReview');
+}
+
+function renderSyncReviewList() {
+  const wrap = document.getElementById('syncReviewList');
+  wrap.innerHTML = _syncCandidates.map((item, i) => {
+    const c = courses.find(x => x.id === item.course_id);
+    const label = _syncKind === 'assignments' ? item.name : item.title;
+    const meta = _syncKind === 'assignments'
+      ? [c ? c.code : '', fmtDate(item.due_date)].filter(Boolean).join(' · ')
+      : [c ? c.code : '', item.week_label].filter(Boolean).join(' · ');
+    return `<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer">
+      <input type="checkbox" ${item._checked ? 'checked' : ''} onchange="_syncCandidates[${i}]._checked=this.checked" style="margin-top:3px">
+      <span style="flex:1">
+        <span style="display:block;font-size:13px;font-weight:600">${escHtml(label)}</span>
+        <span style="display:block;font-size:11px;color:var(--text3);margin-top:2px">${escHtml(meta)}</span>
+      </span>
+    </label>`;
+  }).join('') || '<div style="text-align:center;padding:20px;color:var(--text3)">Nothing to review</div>';
+}
+
+async function confirmSyncReview() {
+  const chosen = _syncCandidates.filter(c => c._checked);
+  if (!chosen.length) { closeModal('modalSyncReview'); showToast('Nothing added'); return; }
+  let added = 0;
+  if (_syncKind === 'assignments') {
+    for (const a of chosen) {
+      const { _checked, ...rest } = a;
+      const result = await sb('POST', 'assignments', { ...rest, completed: false });
       assignments.push(result[0]);
       added++;
     }
+    if (currentPage === 'assignments') renderAssignments();
+    if (currentPage === 'today') renderToday();
+    if (currentPage === 'dashboard') renderDashboard();
+  } else {
+    for (const r of chosen) {
+      const { _checked, ...rest } = r;
+      const result = await sb('POST', 'readings', { ...rest, is_read: false });
+      readings.push(result[0]);
+      added++;
+    }
+    renderReadings();
   }
-  if (currentPage === "assignments") renderAssignments();
-  if (currentPage === "today") renderToday();
-  if (currentPage === "dashboard") renderDashboard();
-  showToast(added > 0 ? "Added " + added + " new assignment" + (added > 1 ? "s" : "") + "!" : "All assignments already up to date.");
+  closeModal('modalSyncReview');
+  showToast(`Added ${added} new ${_syncKind === 'assignments' ? 'assignment' : 'reading'}${added !== 1 ? 's' : ''}!`);
 }
-
 
 // ── SYNC COURSE COLORS ───────────────────────────────
 async function syncCourseColors() {
