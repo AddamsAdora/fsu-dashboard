@@ -275,7 +275,7 @@ input:checked + .toggle-track:before { transform: translateX(18px); }
   transition: all .12s; font-family: 'Barlow', sans-serif; text-transform: uppercase; letter-spacing: .4px;
 }
 .filter-btn:hover { border-color: var(--pink); color: var(--pink); }
-.filter-btn.active { background: var(--pink-glow); border-color: var(--pink); color: var(--pink); }
+.filter-btn.active { background: #101820; border-color: #5CB8B2; color: #5CB8B2; }
 .filter-btn.fb-garnet { border-color: rgba(120,47,64,0.55); color: #b5828d; }
 .filter-btn.fb-garnet:hover,
 .filter-btn.fb-garnet.active { background: rgba(120,47,64,0.22); border-color: #782F40; color: #e3aab5; }
@@ -412,7 +412,9 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 /* ── READING ROW ── */
 .reading-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); border-radius: 6px; transition: background .1s; }
 .reading-row:last-child { border-bottom: none; }
-.reading-row:hover { background: var(--surface2); }
+.reading-row:hover { background: #572932; }
+.reading-row:hover .reading-title { color: #DFD1A7; }
+.reading-row:hover .reading-citation { color: rgba(223,209,167,0.75); }
 .reading-text { flex: 1; }
 .reading-title { font-size: 13px; font-weight: 500; color: #ffffff; }
 .reading-citation { font-size: 11px; color: var(--text3); margin-top: 2px; }
@@ -444,7 +446,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .tbl th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text3); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
 .tbl td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
 .tbl tr:last-child td { border-bottom: none; }
-.tbl tr:hover td { background: var(--surface2); }
+.tbl tr:hover td { background: #572932; color: #DFD1A7; }
 .completed-row td { opacity: .45; }
 .completed-row td .dl-name { text-decoration: line-through; }
 
