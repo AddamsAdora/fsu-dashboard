@@ -2306,10 +2306,18 @@ function renderGrades() {
            </div>`;
       return `<tr>
         <td>${a.name}</td>
+        <td class="hide-mobile">${fmtDate(a.due_date)}</td>
         <td>${colLabel}</td>
         <td>${inputCell}</td>
       </tr>`;
     }
+
+    const sortedAssign = [...cAssign].sort((a,b) => {
+      if (!a.due_date && !b.due_date) return 0;
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return new Date(a.due_date) - new Date(b.due_date);
+    });
 
     return `<div class="card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -2317,9 +2325,9 @@ function renderGrades() {
         ${avgHtml}
       </div>
       <table class="tbl">
-        <thead><tr><th>Assignment</th><th style="width:90px">Out of</th><th style="width:140px">Your Grade</th></tr></thead>
+        <thead><tr><th>Assignment</th><th class="hide-mobile" style="width:80px">Due</th><th style="width:90px">Out of</th><th style="width:140px">Your Grade</th></tr></thead>
         <tbody>
-          ${cAssign.length ? cAssign.map(gradeRow).join('') : '<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text3)">No graded-item assignments yet</td></tr>'}
+          ${sortedAssign.length ? sortedAssign.map(gradeRow).join('') : '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3)">No graded-item assignments yet</td></tr>'}
         </tbody>
       </table>
     </div>`;
