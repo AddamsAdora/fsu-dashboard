@@ -2271,11 +2271,11 @@ function renderGrades() {
     const wAssign = cAssign.filter(a => a.weight && !a.points);
 
     const ptsGraded = ptsAssign.filter(a => a.grade !== null && a.grade !== undefined);
-    let ptsAvg = null;
+    let ptsEarned = null, ptsPossible = null, ptsAvg = null;
     if (ptsGraded.length) {
-      const earned = ptsGraded.reduce((s,a) => s + a.grade, 0);
-      const possible = ptsGraded.reduce((s,a) => s + a.points, 0);
-      ptsAvg = possible ? (earned / possible) * 100 : null;
+      ptsEarned = ptsGraded.reduce((s,a) => s + a.grade, 0);
+      ptsPossible = ptsGraded.reduce((s,a) => s + a.points, 0);
+      ptsAvg = ptsPossible ? (ptsEarned / ptsPossible) * 100 : null;
     }
 
     const wGraded = wAssign.filter(a => a.grade !== null && a.grade !== undefined);
@@ -2286,7 +2286,7 @@ function renderGrades() {
     }
 
     const avgParts = [];
-    if (ptsAvg !== null) avgParts.push(`<div class="grade-avg">${ptsAvg.toFixed(1)}%<span style="font-size:10px;font-weight:600;color:var(--text3);display:block;text-transform:uppercase;letter-spacing:.4px">points-based</span></div>`);
+    if (ptsEarned !== null) avgParts.push(`<div class="grade-avg">${ptsEarned} <span style="font-size:15px;color:var(--text3);font-weight:600">/ ${ptsPossible}</span><span style="font-size:10px;font-weight:600;color:var(--text3);display:block;text-transform:uppercase;letter-spacing:.4px">total score${ptsAvg !== null ? ' · ' + ptsAvg.toFixed(1) + '%' : ''}</span></div>`);
     if (wAvg !== null) avgParts.push(`<div class="grade-avg">${wAvg.toFixed(1)}%<span style="font-size:10px;font-weight:600;color:var(--text3);display:block;text-transform:uppercase;letter-spacing:.4px">weighted</span></div>`);
     const avgHtml = avgParts.length
       ? `<div style="display:flex;gap:18px;text-align:right">${avgParts.join('')}</div>`
