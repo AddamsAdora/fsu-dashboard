@@ -649,6 +649,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <a href="#" onclick="nav('export')" id="nav-export"><i class="ti ti-file-export"></i> Export</a>
   </div>
   <div class="topnav-right">
+    <select id="semesterSwitcher" onchange="setViewingSemester(this.value)" title="Switch semester" style="width:auto;padding:6px 10px;font-size:12px;font-weight:600;border-radius:var(--radius-sm)"></select>
     <button class="dark-btn" onclick="toggleDarkMode()" id="darkBtn" title="Toggle dark mode"><i class="ti ti-moon"></i></button>
   </div>
 </nav>
@@ -1191,6 +1192,32 @@ Due Jul 31 at 11:59pm | -/24 pts"></textarea>
 // ────────────────────────────────────────────────
 let SB_URL = '', SB_KEY = '';
 let courses = [], assignments = [], readings = [], notes = [], milestones = [], semesters = [];
+let viewingSemesterId = localStorage.getItem('viewing_semester_id') || null;
+
+function getViewingSemester() {
+  if (viewingSemesterId) {
+    const s = semesters.find(s => s.id === viewingSemesterId);
+    if (s) return s;
+  }
+  return semesters.find(s => s.is_current) || semesters[0] || {};
+}
+
+function setViewingSemester(id) {
+  viewingSemesterId = id;
+  localStorage.setItem('viewing_semester_id', id);
+  renderSemesterSwitcher();
+  renderAll();
+}
+
+function renderSemesterSwitcher() {
+  const sel = document.getElementById('semesterSwitcher');
+  if (!sel || !semesters.length) return;
+  const sorted = [...semesters].sort((a,b) => new Date(b.start_date || 0) - new Date(a.start_date || 0));
+  const activeSem = getViewingSemester();
+  sel.innerHTML = sorted.map(s =>
+    `<option value="${s.id}" ${s.id === activeSem.id ? 'selected' : ''}>${s.name}${s.is_current ? ' (current)' : ''}</option>`
+  ).join('');
+}
 let discData = {}; // { weekKey: { posts: n, tokenUsed: bool } }
 let currentPage = 'today';
 let currentCourseFilter = 'all';
@@ -1367,6 +1394,7 @@ async function launch() {
   await loadAll();
   await syncCourseColors();
   if (!semesters.length) await seedData();
+  renderSemesterSwitcher();
   initDark();
   nav('today');
 }
@@ -1452,14 +1480,16 @@ function closeDrawer() { document.getElementById('drawer').classList.remove('ope
 
 // ── HELPERS ──────────────────────────────────────
 function courseById(id) { return courses.find(c => c.id === id) || {}; }
+function colorToTagClass(color) {
+  return color === 'gold' ? 'tag-gold' : color === 'blue' ? 'tag-blue' : 'tag-garnet';
+}
 function courseTag(c) {
   if (!c || !c.code) return '';
-  const color = c.code.startsWith('EDG') ? 'tag-gold' : c.code.startsWith('EME') ? 'tag-blue' : 'tag-garnet';
-  return `<span class="tag ${color}">${c.code}</span>`;
+  return `<span class="tag ${colorToTagClass(c.color)}">${c.code}</span>`;
 }
-function filterBtnClass(code) {
-  if (!code || code === 'All') return '';
-  return code.startsWith('EDG') ? 'fb-gold' : code.startsWith('EME') ? 'fb-blue' : 'fb-garnet';
+function filterBtnClass(color) {
+  if (!color) return '';
+  return color === 'gold' ? 'fb-gold' : color === 'blue' ? 'fb-blue' : 'fb-garnet';
 }
 function fmtDate(d) {
   if (!d) return '—';
@@ -1711,7 +1741,7 @@ async function saveTodayReflection() {
 
 // ── DASHBOARD ────────────────────────────────────
 function renderDashboard() {
-  const curSem = semesters.find(s => s.is_current) || semesters[0] || {};
+  const curSem = getViewingSemester();
   document.getElementById('semesterLabel').textContent = curSem.name || '';
 
   const total = assignments.length;
@@ -1727,13 +1757,13 @@ function renderDashboard() {
   `;
 
   const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
-  const colorMap = ['c-garnet', 'c-gold', 'c-blue'];
   document.getElementById('courseGrid').innerHTML = semCourses.map((c,i) => {
     const cAssign = assignments.filter(a => a.course_id === c.id);
     const cDone = cAssign.filter(a => a.completed).length;
     const pct = cAssign.length ? Math.round(cDone/cAssign.length*100) : 0;
     const next = cAssign.filter(a => !a.completed && a.due_date).sort((a,b) => new Date(a.due_date)-new Date(b.due_date))[0];
-    return `<div class="course-card ${colorMap[i]||'c-garnet'}">
+    const cardClass = c.color === 'gold' ? 'c-gold' : c.color === 'blue' ? 'c-blue' : 'c-garnet';
+    return `<div class="course-card ${cardClass}">
       <div class="course-code">${c.code} · ${c.credits} cr</div>
       <div class="course-name">${c.name}</div>
       <div class="course-meta">
@@ -1787,18 +1817,21 @@ function setAssignUnit(unit) {
 }
 
 function renderAssignments() {
-  const semCourses = courses;
+  const curSem = getViewingSemester();
+  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
   const filterEl = document.getElementById('assignFilter');
   const filters = ['All', ...new Set(semCourses.map(c => c.code))];
-  filterEl.innerHTML = filters.map(f =>
-    `<button class="filter-btn ${filterBtnClass(f)} ${f === 'All' ? (currentCourseFilter==='all'?'active':'') : (currentCourseFilter===f?'active':'')}" onclick="setAssignFilter('${f}')">${f}</button>`
-  ).join('');
+  filterEl.innerHTML = filters.map(f => {
+    const fc = semCourses.find(c => c.code === f);
+    return `<button class="filter-btn ${filterBtnClass(fc && fc.color)} ${f === 'All' ? (currentCourseFilter==='all'?'active':'') : (currentCourseFilter===f?'active':'')}" onclick="setAssignFilter('${f}')">${f}</button>`;
+  }).join('');
 
   document.getElementById('unitBtnPercent').classList.toggle('active', assignUnit === 'percent');
   document.getElementById('unitBtnPoints').classList.toggle('active', assignUnit === 'points');
   document.getElementById('assignWeightHeader').textContent = assignUnit === 'points' ? 'Points' : 'Weight';
 
-  let list = [...assignments];
+  const semCourseIds = new Set(semCourses.map(c => c.id));
+  let list = assignments.filter(a => semCourseIds.has(a.course_id));
   if (currentCourseFilter !== 'all') {
     const c = courses.find(x => x.code === currentCourseFilter);
     if (c) list = list.filter(a => a.course_id === c.id);
@@ -1972,15 +2005,21 @@ function inferReadingDueDate(courseId, weekLabel) {
 }
 
 function renderReadings() {
-  const done = readings.filter(r => r.is_read).length;
-  document.getElementById('readProgress').textContent = `${done} / ${readings.length} readings complete`;
+  const curSem = getViewingSemester();
+  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+  const semCourseIds = new Set(semCourses.map(c => c.id));
+  const semReadings = readings.filter(r => semCourseIds.has(r.course_id));
 
-  const filters = ['All', ...new Set(courses.map(c => c.code))];
-  document.getElementById('readFilter').innerHTML = filters.map(f =>
-    `<button class="filter-btn ${filterBtnClass(f)} ${f === 'All' ? (currentReadFilter==='all'?'active':'') : (currentReadFilter===f?'active':'')}" onclick="setReadFilter('${f}')">${f}</button>`
-  ).join('');
+  const done = semReadings.filter(r => r.is_read).length;
+  document.getElementById('readProgress').textContent = `${done} / ${semReadings.length} readings complete`;
 
-  let list = [...readings];
+  const filters = ['All', ...new Set(semCourses.map(c => c.code))];
+  document.getElementById('readFilter').innerHTML = filters.map(f => {
+    const fc = semCourses.find(c => c.code === f);
+    return `<button class="filter-btn ${filterBtnClass(fc && fc.color)} ${f === 'All' ? (currentReadFilter==='all'?'active':'') : (currentReadFilter===f?'active':'')}" onclick="setReadFilter('${f}')">${f}</button>`;
+  }).join('');
+
+  let list = [...semReadings];
   if (currentReadFilter !== 'all') {
     const c = courses.find(x => x.code === currentReadFilter);
     if (c) list = list.filter(r => r.course_id === c.id);
@@ -2028,7 +2067,7 @@ function renderReadings() {
       activeHtml += `<div style="font-size:12px;font-weight:600;color:var(--text3);margin:8px 0 4px;display:flex;align-items:center">${wk}${dueBadge}</div>`;
       rs.forEach(r => {
         const rCourse = courseById(r.course_id);
-        const rCheckClass = rCourse.code && rCourse.code.startsWith('EDG') ? 'cc-gold' : rCourse.code && rCourse.code.startsWith('EME') ? 'cc-blue' : 'cc-garnet';
+        const rCheckClass = rCourse.color === 'gold' ? 'cc-gold' : rCourse.color === 'blue' ? 'cc-blue' : 'cc-garnet';
         activeHtml += `<div class="reading-row">
           <div class="check-circle ${rCheckClass}" onclick="toggleReading('${r.id}')" style="margin-top:2px"></div>
           <div class="reading-text">
@@ -2058,7 +2097,7 @@ function renderReadings() {
       cRows += `<div style="margin-bottom:14px"><div class="section-title" style="margin-bottom:6px;opacity:.6"><i class="ti ti-books"></i>${code}</div>`;
       rs.forEach(r => {
         const rCourse = courseById(r.course_id);
-        const rCheckClass = rCourse.code && rCourse.code.startsWith('EDG') ? 'cc-gold' : rCourse.code && rCourse.code.startsWith('EME') ? 'cc-blue' : 'cc-garnet';
+        const rCheckClass = rCourse.color === 'gold' ? 'cc-gold' : rCourse.color === 'blue' ? 'cc-blue' : 'cc-garnet';
         cRows += `<div class="reading-row" style="opacity:.55">
           <div class="check-circle done ${rCheckClass}" onclick="toggleReading('${r.id}')" style="margin-top:2px"></div>
           <div class="reading-text">
@@ -2163,7 +2202,7 @@ async function deleteReading() {
 
 // ── TIMELINE ─────────────────────────────────────
 function renderTimeline() {
-  const curSem = semesters.find(s => s.is_current) || {};
+  const curSem = getViewingSemester();
   const start = curSem.start_date ? new Date(curSem.start_date + 'T12:00:00') : new Date('2026-05-12');
   const end = curSem.end_date ? new Date(curSem.end_date + 'T12:00:00') : new Date('2026-08-01');
   const today = new Date();
@@ -2211,7 +2250,7 @@ function renderTimeline() {
 
 // ── DISCUSSION ───────────────────────────────────
 function renderDiscussion() {
-  const curSem = semesters.find(s => s.is_current) || {};
+  const curSem = getViewingSemester();
   const start = curSem.start_date ? new Date(curSem.start_date + 'T12:00:00') : new Date('2026-05-12');
   const today = new Date();
 
@@ -2269,14 +2308,15 @@ function setDiscPosts(week, n) {
 
 // ── GRADES ───────────────────────────────────────
 function renderGrades() {
-  const curSem = semesters.find(s => s.is_current) || {};
+  const curSem = getViewingSemester();
   let semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
 
   const filterEl = document.getElementById('gradesFilter');
   const filters = ['All', ...new Set(semCourses.map(c => c.code))];
-  filterEl.innerHTML = filters.map(f =>
-    `<button class="filter-btn ${filterBtnClass(f)} ${f === 'All' ? (currentGradeFilter==='all'?'active':'') : (currentGradeFilter===f?'active':'')}" onclick="setGradeFilter('${f}')">${f}</button>`
-  ).join('');
+  filterEl.innerHTML = filters.map(f => {
+    const fc = semCourses.find(c => c.code === f);
+    return `<button class="filter-btn ${filterBtnClass(fc && fc.color)} ${f === 'All' ? (currentGradeFilter==='all'?'active':'') : (currentGradeFilter===f?'active':'')}" onclick="setGradeFilter('${f}')">${f}</button>`;
+  }).join('');
 
   if (currentGradeFilter !== 'all') {
     semCourses = semCourses.filter(c => c.code === currentGradeFilter);
@@ -2402,7 +2442,7 @@ function renderNotes() {
     const c = n.course_id ? courseById(n.course_id) : null;
     const tags = n.tags ? n.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     const dt = new Date(n.updated_at || n.created_at);
-    const noteColorClass = c && c.code && c.code.startsWith('EDG') ? 'note-gold' : c && c.code && c.code.startsWith('EME') ? 'note-blue' : c ? 'note-garnet' : '';
+    const noteColorClass = c && c.color === 'gold' ? 'note-gold' : c && c.color === 'blue' ? 'note-blue' : c ? 'note-garnet' : '';
     return `<div class="note-card ${noteColorClass}" onclick="editNote('${n.id}')">
       <div class="note-title">${n.title || 'Untitled'}</div>
       <div class="note-body">${n.body}</div>
@@ -2697,7 +2737,7 @@ async function loadDefaultMilestones() {
 
 // ── EXPORT ───────────────────────────────────────
 function renderExport() {
-  const curSem = semesters.find(s => s.is_current) || semesters[0] || {};
+  const curSem = getViewingSemester();
   document.getElementById('exportTitle').textContent = curSem.name || 'Semester Summary';
   document.getElementById('exportSubtitle').textContent = 'Generated ' + new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -2761,7 +2801,7 @@ function downloadExportPDF() {
   doc.text('FSU Ed.D. Dashboard', margin, 14);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
   doc.setTextColor(255, 240, 200);
-  const curSem = semesters.find(s => s.is_current) || semesters[0] || {};
+  const curSem = getViewingSemester();
   doc.text((curSem.name || 'Semester') + '  ·  Progress Report', margin, 23);
   doc.setTextColor(255, 220, 180);
   doc.text('Generated ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }), pageW - margin, 23, { align: 'right' });
@@ -3231,7 +3271,7 @@ function parseAssignBlock(lines, courseId) {
     const mi = monthNames.indexOf(dateMatch[1].slice(0,3).toLowerCase());
     if (mi > -1) {
       const day = parseInt(dateMatch[2], 10);
-      const semNow = semesters.find(s => s.is_current) || semesters[0] || {};
+      const semNow = getViewingSemester();
       const yearGuess = semNow.start_date ? new Date(semNow.start_date).getFullYear() : new Date().getFullYear();
       const dt = new Date(yearGuess, mi, day);
       due_date = dt.toISOString().slice(0, 10);
