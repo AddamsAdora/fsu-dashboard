@@ -1926,7 +1926,7 @@ async function saveAssignment() {
   if (id) { await sbPatch('assignments', id, data); Object.assign(assignments.find(a => a.id === id), data); }
   else { const r = await sb('POST', 'assignments', { ...data, completed: false }); assignments.push(r[0]); }
   closeModal('modalAssignment');
-  renderAssignments();
+  renderAll();
   showToast('Saved!');
 }
 
@@ -2379,6 +2379,7 @@ async function saveGrade(id, val) {
   await sbPatch('assignments', id, { grade });
   const a = assignments.find(x => x.id === id);
   if (a) a.grade = grade;
+  renderGrades();
   showToast('Grade saved');
 }
 
