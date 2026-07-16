@@ -1001,6 +1001,12 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
       <div><label>Weight (%)</label><input type="number" id="assignWeight" placeholder="20"></div>
       <div><label>Points</label><input type="number" id="assignPoints" placeholder="100"></div>
     </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500">
+        <input type="checkbox" id="assignPassFail" style="width:auto" onchange="toggleAssignPassFailUI()">
+        Graded Complete / Incomplete (no points or %)
+      </label>
+    </div>
     <div class="form-row"><div><label>Notes (optional)</label><textarea id="assignNotes" rows="2"></textarea></div></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" id="deleteAssignBtn" onclick="deleteAssignment()" style="display:none;margin-right:auto;color:#ef4444;border-color:rgba(239,68,68,.4)"><i class="ti ti-trash"></i> Delete</button>
@@ -1861,6 +1867,13 @@ async function toggleAssign(id) {
   if (currentPage === 'today') renderToday();
 }
 
+function toggleAssignPassFailUI() {
+  const isPF = document.getElementById('assignPassFail').checked;
+  document.getElementById('assignWeight').disabled = isPF;
+  document.getElementById('assignPoints').disabled = isPF;
+  if (isPF) { document.getElementById('assignWeight').value = ''; document.getElementById('assignPoints').value = ''; }
+}
+
 function openAddAssignment() {
   document.getElementById('editAssignId').value = '';
   document.getElementById('assignName').value = '';
@@ -1868,6 +1881,8 @@ function openAddAssignment() {
   document.getElementById('assignWeight').value = '';
   document.getElementById('assignPoints').value = '';
   document.getElementById('assignNotes').value = '';
+  document.getElementById('assignPassFail').checked = false;
+  toggleAssignPassFailUI();
   document.getElementById('assignModalTitle').textContent = 'Add Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'none';
   const sel = document.getElementById('assignCourse');
@@ -1884,6 +1899,8 @@ function editAssignment(id) {
   document.getElementById('assignWeight').value = a.weight || '';
   document.getElementById('assignPoints').value = a.points || '';
   document.getElementById('assignNotes').value = a.notes || '';
+  document.getElementById('assignPassFail').checked = !!a.pass_fail;
+  toggleAssignPassFailUI();
   document.getElementById('assignModalTitle').textContent = 'Edit Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'inline-flex';
   const sel = document.getElementById('assignCourse');
@@ -1894,13 +1911,15 @@ function editAssignment(id) {
 
 async function saveAssignment() {
   const id = document.getElementById('editAssignId').value;
+  const isPF = document.getElementById('assignPassFail').checked;
   const data = {
     name: document.getElementById('assignName').value.trim(),
     course_id: document.getElementById('assignCourse').value,
     type: document.getElementById('assignType').value,
     due_date: document.getElementById('assignDue').value || null,
-    weight: parseFloat(document.getElementById('assignWeight').value) || null,
-    points: parseFloat(document.getElementById('assignPoints').value) || null,
+    weight: isPF ? null : (parseFloat(document.getElementById('assignWeight').value) || null),
+    points: isPF ? null : (parseFloat(document.getElementById('assignPoints').value) || null),
+    pass_fail: isPF,
     notes: document.getElementById('assignNotes').value.trim()
   };
   if (!data.name) { showToast('Assignment name required'); return; }
@@ -2264,11 +2283,13 @@ function renderGrades() {
   }
 
   document.getElementById('gradesContent').innerHTML = semCourses.map(c => {
-    // Two independent schemes, matched to whatever each assignment actually has:
-    // points-based ("87 / 100 pts") or weight-based ("92% of a 20%-weight item").
-    const cAssign = assignments.filter(a => a.course_id === c.id && (a.points || a.weight));
+    // Three independent schemes, matched to whatever each assignment actually has:
+    // points-based ("87 / 100 pts"), weight-based ("92% of a 20%-weight item"),
+    // or pass/fail (marked Complete / Incomplete, no points or %).
+    const cAssign = assignments.filter(a => a.course_id === c.id && (a.points || a.weight || a.pass_fail));
     const ptsAssign = cAssign.filter(a => a.points);
     const wAssign = cAssign.filter(a => a.weight && !a.points);
+    const pfAssign = cAssign.filter(a => a.pass_fail);
 
     const ptsGraded = ptsAssign.filter(a => a.grade !== null && a.grade !== undefined);
     let ptsEarned = null, ptsPossible = null, ptsAvg = null;
@@ -2285,25 +2306,44 @@ function renderGrades() {
       wAvg = totalW ? wGraded.reduce((s,a) => s + (a.grade * a.weight), 0) / totalW : null;
     }
 
+    const pfGraded = pfAssign.filter(a => a.grade === 1 || a.grade === 0);
+    let pfComplete = null, pfTotal = null;
+    if (pfGraded.length) {
+      pfComplete = pfGraded.filter(a => a.grade === 1).length;
+      pfTotal = pfGraded.length;
+    }
+
     const avgParts = [];
     if (ptsEarned !== null) avgParts.push(`<div class="grade-avg">${ptsEarned} <span style="font-size:15px;color:var(--text3);font-weight:600">/ ${ptsPossible}</span><span style="font-size:10px;font-weight:600;color:var(--text3);display:block;text-transform:uppercase;letter-spacing:.4px">total score${ptsAvg !== null ? ' · ' + ptsAvg.toFixed(1) + '%' : ''}</span></div>`);
     if (wAvg !== null) avgParts.push(`<div class="grade-avg">${wAvg.toFixed(1)}%<span style="font-size:10px;font-weight:600;color:var(--text3);display:block;text-transform:uppercase;letter-spacing:.4px">weighted</span></div>`);
+    if (pfComplete !== null) avgParts.push(`<div class="grade-avg">${pfComplete} <span style="font-size:15px;color:var(--text3);font-weight:600">/ ${pfTotal}</span><span style="font-size:10px;font-weight:600;color:var(--text3);display:block;text-transform:uppercase;letter-spacing:.4px">complete</span></div>`);
     const avgHtml = avgParts.length
       ? `<div style="display:flex;gap:18px;text-align:right">${avgParts.join('')}</div>`
       : '<div style="font-size:13px;color:var(--text3)">No grades yet</div>';
 
     function gradeRow(a) {
       const isPts = !!a.points;
-      const colLabel = isPts ? `${a.points} pts` : `${a.weight}%`;
-      const inputCell = isPts
-        ? `<div style="display:flex;align-items:center;gap:5px;justify-content:center">
+      const isPF = !!a.pass_fail;
+      const colLabel = isPF ? 'P/F' : isPts ? `${a.points} pts` : `${a.weight}%`;
+      let inputCell;
+      if (isPF) {
+        const isComplete = a.grade === 1;
+        const isIncomplete = a.grade === 0;
+        inputCell = `<div style="display:flex;gap:6px;justify-content:center">
+             <button class="btn btn-sm ${isComplete ? 'btn-primary' : 'btn-secondary'}" onclick="saveGrade('${a.id}', '1')" style="padding:4px 10px">Complete</button>
+             <button class="btn btn-sm ${isIncomplete ? 'btn-primary' : 'btn-secondary'}" onclick="saveGrade('${a.id}', '0')" style="padding:4px 10px">Incomplete</button>
+           </div>`;
+      } else if (isPts) {
+        inputCell = `<div style="display:flex;align-items:center;gap:5px;justify-content:center">
              <input class="grade-input" type="number" min="0" max="${a.points}" value="${a.grade ?? ''}" placeholder="—" onchange="saveGrade('${a.id}', this.value)" style="width:56px">
              <span style="font-size:11px;color:var(--text3)">/ ${a.points}</span>
-           </div>`
-        : `<div style="display:flex;align-items:center;gap:3px;justify-content:center">
+           </div>`;
+      } else {
+        inputCell = `<div style="display:flex;align-items:center;gap:3px;justify-content:center">
              <input class="grade-input" type="number" min="0" max="100" value="${a.grade ?? ''}" placeholder="—" onchange="saveGrade('${a.id}', this.value)" style="width:56px">
              <span style="font-size:11px;color:var(--text3)">%</span>
            </div>`;
+      }
       return `<tr>
         <td>${a.name}</td>
         <td class="hide-mobile">${fmtDate(a.due_date)}</td>
