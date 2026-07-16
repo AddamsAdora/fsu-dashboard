@@ -640,6 +640,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <a href="#" onclick="nav('today')" id="nav-today"><i class="ti ti-sun"></i> Today</a>
     <a href="#" onclick="nav('dashboard')" id="nav-dashboard"><i class="ti ti-dashboard"></i> Overview</a>
     <a href="#" onclick="nav('assignments')" id="nav-assignments"><i class="ti ti-checkbox"></i> Assignments</a>
+    <a href="#" onclick="nav('grades')" id="nav-grades"><i class="ti ti-chart-bar"></i> Grades</a>
     <a href="#" onclick="nav('readings')" id="nav-readings"><i class="ti ti-books"></i> Readings</a>
     <a href="#" onclick="nav('timeline')" id="nav-timeline"><i class="ti ti-calendar"></i> Timeline</a>
     <a href="#" onclick="nav('notes')" id="nav-notes"><i class="ti ti-notes"></i> Notes</a>
@@ -660,6 +661,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <a href="#" onclick="nav('today');closeDrawer()"><i class="ti ti-sun"></i> Today</a>
     <a href="#" onclick="nav('dashboard');closeDrawer()"><i class="ti ti-dashboard"></i> Overview</a>
     <a href="#" onclick="nav('assignments');closeDrawer()"><i class="ti ti-checkbox"></i> Assignments</a>
+    <a href="#" onclick="nav('grades');closeDrawer()"><i class="ti ti-chart-bar"></i> Grades</a>
     <a href="#" onclick="nav('readings');closeDrawer()"><i class="ti ti-books"></i> Readings</a>
     <a href="#" onclick="nav('timeline');closeDrawer()"><i class="ti ti-calendar"></i> Timeline</a>
     <a href="#" onclick="nav('notes');closeDrawer()"><i class="ti ti-notes"></i> Notes</a>
@@ -803,6 +805,14 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- GRADES PAGE -->
+  <div class="page" id="page-grades">
+    <div class="page-header">
+      <div><h1>Grades</h1><p>Enter grades as they're posted to track where you stand</p></div>
+    </div>
+    <div id="gradesContent"></div>
   </div>
 
   <!-- READINGS PAGE -->
@@ -1420,6 +1430,7 @@ function renderPage(page) {
   if (page === 'today') renderToday();
   else if (page === 'dashboard') renderDashboard();
   else if (page === 'assignments') renderAssignments();
+  else if (page === 'grades') renderGrades();
   else if (page === 'readings') renderReadings();
   else if (page === 'timeline') renderTimeline();
   else if (page === 'notes') renderNotes();
@@ -2240,26 +2251,62 @@ function renderGrades() {
   const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
 
   document.getElementById('gradesContent').innerHTML = semCourses.map(c => {
-    const cAssign = assignments.filter(a => a.course_id === c.id && a.weight);
-    const graded = cAssign.filter(a => a.grade !== null && a.grade !== undefined);
-    let wavg = null;
-    if (graded.length) {
-      const totalW = graded.reduce((s,a) => s + a.weight, 0);
-      wavg = graded.reduce((s,a) => s + (a.grade * a.weight), 0) / totalW;
+    // Two independent schemes, matched to whatever each assignment actually has:
+    // points-based ("87 / 100 pts") or weight-based ("92% of a 20%-weight item").
+    const cAssign = assignments.filter(a => a.course_id === c.id && (a.points || a.weight));
+    const ptsAssign = cAssign.filter(a => a.points);
+    const wAssign = cAssign.filter(a => a.weight && !a.points);
+
+    const ptsGraded = ptsAssign.filter(a => a.grade !== null && a.grade !== undefined);
+    let ptsAvg = null;
+    if (ptsGraded.length) {
+      const earned = ptsGraded.reduce((s,a) => s + a.grade, 0);
+      const possible = ptsGraded.reduce((s,a) => s + a.points, 0);
+      ptsAvg = possible ? (earned / possible) * 100 : null;
     }
+
+    const wGraded = wAssign.filter(a => a.grade !== null && a.grade !== undefined);
+    let wAvg = null;
+    if (wGraded.length) {
+      const totalW = wGraded.reduce((s,a) => s + a.weight, 0);
+      wAvg = totalW ? wGraded.reduce((s,a) => s + (a.grade * a.weight), 0) / totalW : null;
+    }
+
+    const avgParts = [];
+    if (ptsAvg !== null) avgParts.push(`<div class="grade-avg">${ptsAvg.toFixed(1)}%<span style="font-size:10px;font-weight:600;color:var(--text3);display:block;text-transform:uppercase;letter-spacing:.4px">points-based</span></div>`);
+    if (wAvg !== null) avgParts.push(`<div class="grade-avg">${wAvg.toFixed(1)}%<span style="font-size:10px;font-weight:600;color:var(--text3);display:block;text-transform:uppercase;letter-spacing:.4px">weighted</span></div>`);
+    const avgHtml = avgParts.length
+      ? `<div style="display:flex;gap:18px;text-align:right">${avgParts.join('')}</div>`
+      : '<div style="font-size:13px;color:var(--text3)">No grades yet</div>';
+
+    function gradeRow(a) {
+      const isPts = !!a.points;
+      const colLabel = isPts ? `${a.points} pts` : `${a.weight}%`;
+      const inputCell = isPts
+        ? `<div style="display:flex;align-items:center;gap:5px;justify-content:center">
+             <input class="grade-input" type="number" min="0" max="${a.points}" value="${a.grade ?? ''}" placeholder="—" onchange="saveGrade('${a.id}', this.value)" style="width:56px">
+             <span style="font-size:11px;color:var(--text3)">/ ${a.points}</span>
+           </div>`
+        : `<div style="display:flex;align-items:center;gap:3px;justify-content:center">
+             <input class="grade-input" type="number" min="0" max="100" value="${a.grade ?? ''}" placeholder="—" onchange="saveGrade('${a.id}', this.value)" style="width:56px">
+             <span style="font-size:11px;color:var(--text3)">%</span>
+           </div>`;
+      return `<tr>
+        <td>${a.name}</td>
+        <td>${colLabel}</td>
+        <td>${inputCell}</td>
+      </tr>`;
+    }
+
     return `<div class="card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <div style="font-size:15px;font-weight:600">${c.code} — ${c.name}</div>
-        ${wavg !== null ? `<div class="grade-avg">${wavg.toFixed(1)}%</div>` : '<div style="font-size:13px;color:var(--text3)">No grades yet</div>'}
+        ${avgHtml}
       </div>
       <table class="tbl">
-        <thead><tr><th>Assignment</th><th>Weight</th><th style="width:120px">Your Grade %</th></tr></thead>
+        <thead><tr><th>Assignment</th><th style="width:90px">Out of</th><th style="width:140px">Your Grade</th></tr></thead>
         <tbody>
-          ${cAssign.map(a => `<tr>
-            <td>${a.name}</td>
-            <td>${a.weight}%</td>
-            <td><input class="grade-input" type="number" min="0" max="100" value="${a.grade ?? ''}" placeholder="—" onchange="saveGrade('${a.id}', this.value)"></td>
-          </tr>`).join('')}
+          ${cAssign.length ? cAssign.map(gradeRow).join('') : '<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text3)">No graded-item assignments yet</td></tr>'}
         </tbody>
       </table>
     </div>`;
