@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FSU · Ed.D. Dashboard</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400;1,700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -1076,7 +1082,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <input type="hidden" id="noteAssignId">
     <div class="form-row"><div><label>Title</label><input type="text" id="noteTitle" placeholder="Note title"></div></div>
     <div class="form-row cols2">
-      <div><label>Course (optional)</label><select id="noteCourse"><option value="">— No course —</option></select></div>
+      <div><label>Course (optional)</label><select id="noteCourse"><option value="">— No course —</option></select><div id="noteSemesterLabel" style="font-size:11px;color:var(--text3);margin-top:4px"></div></div>
       <div><label>Module / Week</label><select id="noteModule"><option value="">— Select —</option></select></div>
     </div>
     <div class="form-row"><div><label>Body</label><textarea id="noteBody" rows="8" placeholder="Your notes…"></textarea></div></div>
@@ -1606,6 +1612,7 @@ function getReorderableArray(name) {
   if (name === 'readings') return readings;
   if (name === 'notes') return notes;
   if (name === 'courses') return courses;
+  if (name === 'milestones') return milestones;
   return [];
 }
 
@@ -2550,10 +2557,11 @@ function renderGrades() {
     }
 
     const sortedAssign = [...cAssign].sort((a,b) => {
-      if (!a.due_date && !b.due_date) return (a.sort_order||0) - (b.sort_order||0);
+      if ((a.sort_order || 0) !== (b.sort_order || 0)) return (a.sort_order || 0) - (b.sort_order || 0);
+      if (!a.due_date && !b.due_date) return 0;
       if (!a.due_date) return 1;
       if (!b.due_date) return -1;
-      return new Date(a.due_date) - new Date(b.due_date) || (a.sort_order||0) - (b.sort_order||0);
+      return new Date(a.due_date) - new Date(b.due_date);
     });
 
     return `<div class="card" style="margin-bottom:16px">
@@ -2609,6 +2617,7 @@ function renderNotes() {
       <div class="note-body">${n.body}</div>
       <div class="note-footer">
         ${c ? courseTag(c) : ''}
+        ${n.semester_id ? `<span class="tag tag-gray">${semesterName(n.semester_id)}</span>` : ''}
         ${n.module_label ? `<span class="tag tag-gray">${n.module_label}</span>` : ''}
         ${tags.map(t => `<span class="tag tag-gray">${t}</span>`).join('')}
         <span class="note-date">${dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} ${dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</span>
@@ -2636,6 +2645,23 @@ function populateNoteModules(courseId, currentVal) {
 }
 let _noteReturnToAssignment = null;
 
+function semesterName(id) {
+  const s = semesters.find(x => x.id === id);
+  return s ? s.name : '';
+}
+function noteCourseOptionsHtml(selectedId) {
+  const sorted = [...courses].sort((a,b) => new Date(semesters.find(s=>s.id===b.semester_id)?.start_date || 0) - new Date(semesters.find(s=>s.id===a.semester_id)?.start_date || 0));
+  return '<option value="">— No course —</option>' + sorted.map(c =>
+    `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.code} — ${c.name} (${semesterName(c.semester_id)})</option>`
+  ).join('');
+}
+function updateNoteSemesterLabel(courseId) {
+  const lbl = document.getElementById('noteSemesterLabel');
+  if (!lbl) return;
+  const c = courses.find(x => x.id === courseId);
+  lbl.textContent = c ? `Semester: ${semesterName(c.semester_id) || '—'}` : '';
+}
+
 function openAddNote(prefillAssignmentId) {
   document.getElementById('editNoteId').value = '';
   document.getElementById('noteAssignId').value = prefillAssignmentId || '';
@@ -2648,21 +2674,21 @@ function openAddNote(prefillAssignmentId) {
   const timeEl = document.getElementById('noteModalTime');
   if (timeEl) timeEl.textContent = nowStr;
   const sel = document.getElementById('noteCourse');
-  sel.innerHTML = '<option value="">— No course —</option>' + courses.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
   let prefillCourseId = '';
   if (prefillAssignmentId) {
     const a = assignments.find(x => x.id === prefillAssignmentId);
     if (a) {
       prefillCourseId = a.course_id;
-      sel.value = a.course_id;
       document.getElementById('noteTitle').value = a.name;
       _noteReturnToAssignment = prefillAssignmentId;
     }
   } else {
     _noteReturnToAssignment = null;
   }
-  sel.onchange = () => populateNoteModules(sel.value, '');
+  sel.innerHTML = noteCourseOptionsHtml(prefillCourseId);
+  sel.onchange = () => { populateNoteModules(sel.value, ''); updateNoteSemesterLabel(sel.value); };
   populateNoteModules(prefillCourseId, '');
+  updateNoteSemesterLabel(prefillCourseId);
   openModal('modalNote');
 }
 
@@ -2683,9 +2709,10 @@ function editNote(id) {
     timeEl.textContent = dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' · ' + dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   }
   const sel = document.getElementById('noteCourse');
-  sel.innerHTML = '<option value="">— No course —</option>' + courses.map(c => `<option value="${c.id}" ${c.id === n.course_id ? 'selected' : ''}>${c.code} — ${c.name}</option>`).join('');
-  sel.onchange = () => populateNoteModules(sel.value, '');
+  sel.innerHTML = noteCourseOptionsHtml(n.course_id);
+  sel.onchange = () => { populateNoteModules(sel.value, ''); updateNoteSemesterLabel(sel.value); };
   populateNoteModules(n.course_id || '', n.module_label || '');
+  updateNoteSemesterLabel(n.course_id);
   openModal('modalNote');
 }
 
@@ -2693,10 +2720,13 @@ async function saveNote() {
   const id = document.getElementById('editNoteId').value;
   const moduleEl = document.getElementById('noteModule');
   const assignId = document.getElementById('noteAssignId').value || null;
+  const courseId = document.getElementById('noteCourse').value || null;
+  const course = courseId ? courses.find(c => c.id === courseId) : null;
   const data = {
     title: document.getElementById('noteTitle').value.trim(),
     body: document.getElementById('noteBody').value.trim(),
-    course_id: document.getElementById('noteCourse').value || null,
+    course_id: courseId,
+    semester_id: course ? course.semester_id : null,
     tags: document.getElementById('noteTags').value.trim(),
     module_label: moduleEl ? moduleEl.value : null,
     assignment_id: assignId,
