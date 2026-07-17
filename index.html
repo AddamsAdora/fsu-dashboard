@@ -1540,7 +1540,7 @@ function renderToday() {
   document.getElementById('todayGreeting').textContent = greet + '!';
   document.getElementById('todaySubtitle').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-  const pending = assignments.filter(a => !a.completed && a.due_date)
+  const pending = assignments.filter(a => !a.completed && a.due_date && !a.optional)
     .sort((a,b) => new Date(a.due_date) - new Date(b.due_date));
 
   // ── COUNTDOWN: next deadline ──
@@ -1765,7 +1765,7 @@ function renderDashboard() {
     const cAssign = assignments.filter(a => a.course_id === c.id);
     const cDone = cAssign.filter(a => a.completed).length;
     const pct = cAssign.length ? Math.round(cDone/cAssign.length*100) : 0;
-    const next = cAssign.filter(a => !a.completed && a.due_date).sort((a,b) => new Date(a.due_date)-new Date(b.due_date))[0];
+    const next = cAssign.filter(a => !a.completed && a.due_date && !a.optional).sort((a,b) => new Date(a.due_date)-new Date(b.due_date))[0];
     const cardClass = c.color === 'gold' ? 'c-gold' : c.color === 'blue' ? 'c-blue' : 'c-garnet';
     return `<div class="course-card ${cardClass}">
       <div class="course-code">${c.code} · ${c.credits} cr</div>
@@ -1784,7 +1784,7 @@ function renderDashboard() {
   }).join('');
 
   // Upcoming deadlines
-  const upcoming = assignments.filter(a => !a.completed && a.due_date)
+  const upcoming = assignments.filter(a => !a.completed && a.due_date && !a.optional)
     .sort((a,b) => new Date(a.due_date)-new Date(b.due_date)).slice(0,8);
   let dlHtml = upcoming.map(a => {
     const c = courseById(a.course_id);
