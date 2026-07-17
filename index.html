@@ -1007,6 +1007,10 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
         <input type="checkbox" id="assignPassFail" style="width:auto" onchange="toggleAssignPassFailUI()">
         Graded Complete / Incomplete (no points or %)
       </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;margin-top:8px">
+        <input type="checkbox" id="assignOptional" style="width:auto">
+        Optional (not required)
+      </label>
     </div>
     <div class="form-row"><div><label>Notes (optional)</label><textarea id="assignNotes" rows="2"></textarea></div></div>
     <div class="modal-footer">
@@ -1847,6 +1851,7 @@ function renderAssignments() {
   const completed = list.filter(a => a.completed);
 
   function unitCell(a) {
+    if (a.pass_fail) return 'P/F';
     if (assignUnit === 'points') return (a.points || a.points === 0) ? a.points : '—';
     return a.weight ? a.weight + '%' : '—';
   }
@@ -1858,6 +1863,7 @@ function renderAssignments() {
       <td><div class="check-circle ${a.completed ? 'done' : ''}" onclick="toggleAssign('${a.id}')"></div></td>
       <td>
         <span class="dl-name" style="cursor:pointer;${a.completed ? 'opacity:.55;text-decoration:line-through' : ''}" onclick="openAssignmentNotes('${a.id}')">${a.name}</span>
+        ${a.optional ? `<span class="tag tag-gray" style="font-size:9px;margin-left:5px;vertical-align:middle">OPTIONAL</span>` : ''}
         ${hasNotes ? `<i class="ti ti-notes" title="Has notes" style="font-size:12px;color:var(--text3);margin-left:5px;cursor:pointer" onclick="openAssignmentNotes('${a.id}')"></i>` : ''}
       </td>
       <td class="hide-mobile">${courseTag(c)}</td>
@@ -1915,6 +1921,7 @@ function openAddAssignment() {
   document.getElementById('assignPoints').value = '';
   document.getElementById('assignNotes').value = '';
   document.getElementById('assignPassFail').checked = false;
+  document.getElementById('assignOptional').checked = false;
   toggleAssignPassFailUI();
   document.getElementById('assignModalTitle').textContent = 'Add Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'none';
@@ -1933,6 +1940,7 @@ function editAssignment(id) {
   document.getElementById('assignPoints').value = a.points || '';
   document.getElementById('assignNotes').value = a.notes || '';
   document.getElementById('assignPassFail').checked = !!a.pass_fail;
+  document.getElementById('assignOptional').checked = !!a.optional;
   toggleAssignPassFailUI();
   document.getElementById('assignModalTitle').textContent = 'Edit Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'inline-flex';
@@ -1953,6 +1961,7 @@ async function saveAssignment() {
     weight: isPF ? null : (parseFloat(document.getElementById('assignWeight').value) || null),
     points: isPF ? null : (parseFloat(document.getElementById('assignPoints').value) || null),
     pass_fail: isPF,
+    optional: document.getElementById('assignOptional').checked,
     notes: document.getElementById('assignNotes').value.trim()
   };
   if (!data.name) { showToast('Assignment name required'); return; }
