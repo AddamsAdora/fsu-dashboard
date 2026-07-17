@@ -452,6 +452,12 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .tbl tr:last-child td { border-bottom: none; }
 .tbl tr:hover td { background: #572932; color: #DFD1A7; }
 [data-theme="light"] .tbl tr:hover td { background: rgba(206,184,136,0.4); color: #241016; }
+
+/* ── DUE TODAY HIGHLIGHT ── */
+.due-today { border-left: 4px solid #CEB888 !important; background: rgba(206,184,136,0.1) !important; padding-left: 10px !important; }
+[data-theme="light"] .due-today { border-left-color: #782F40 !important; background: rgba(120,47,64,0.08) !important; }
+.tbl tr.due-today td:first-child { border-left: 4px solid #CEB888; }
+[data-theme="light"] .tbl tr.due-today td:first-child { border-left-color: #782F40; }
 .completed-row td { opacity: .45; }
 .completed-row td .dl-name { text-decoration: line-through; }
 
@@ -1504,6 +1510,7 @@ function daysUntil(d) {
   if (!d) return null;
   return Math.ceil((new Date(d + 'T12:00:00') - new Date()) / 86400000);
 }
+function isDueToday(d) { return daysUntil(d) === 0; }
 function urgencyDot(d) {
   const days = daysUntil(d);
   if (days === null) return 'ok';
@@ -1577,7 +1584,8 @@ function renderToday() {
     const iconType = isOverdue ? 'red' : isSoon ? 'amber' : 'blue';
     const icon = isOverdue ? 'ti-alert-triangle' : isSoon ? 'ti-clock' : 'ti-calendar';
     const dueStr = isOverdue ? `${Math.abs(days)}d overdue` : days === 0 ? 'Due today' : days === 1 ? 'Due tomorrow' : `Due ${fmtDate(a.due_date)}`;
-    nextHtml += `<div class="focus-item" style="cursor:pointer" onclick="nav('assignments')">
+    const dueTodayCls = days === 0 ? ' due-today' : '';
+    nextHtml += `<div class="focus-item${dueTodayCls}" style="cursor:pointer" onclick="nav('assignments')">
       <div class="focus-icon ${iconType}"><i class="ti ${icon}"></i></div>
       <div class="focus-content"><strong>${a.name}</strong>
         <span>${dueStr} · ${courseTag(c)}</span>
@@ -1790,7 +1798,8 @@ function renderDashboard() {
     const c = courseById(a.course_id);
     const dot = urgencyDot(a.due_date);
     const dotColor = c.color === 'gold' ? '#CEB888' : c.color === 'blue' ? '#5f7d89' : '#782F40';
-    return `<div class="deadline-item"><div class="dl-dot"></div><span class="dl-name">${a.name}</span>${courseTag(c)}<span class="dl-meta">${fmtDate(a.due_date)}</span></div>`.replace('class="dl-dot"', `class="dl-dot" style="background:${dotColor}"`);
+    const dueTodayCls = isDueToday(a.due_date) ? ' due-today' : '';
+    return `<div class="deadline-item${dueTodayCls}"><div class="dl-dot"></div><span class="dl-name">${a.name}</span>${courseTag(c)}<span class="dl-meta">${fmtDate(a.due_date)}</span></div>`.replace('class="dl-dot"', `class="dl-dot" style="background:${dotColor}"`);
   }).join('') || '<p style="color:var(--text3);font-size:13px;padding:8px 0">No upcoming deadlines</p>';
   document.getElementById('upcomingDeadlines').innerHTML = dlHtml;
 
@@ -1859,7 +1868,8 @@ function renderAssignments() {
   function assignRow(a) {
     const c = courseById(a.course_id);
     const hasNotes = !!(a.notes && a.notes.trim()) || notes.some(n => n.assignment_id === a.id);
-    return `<tr>
+    const dueTodayCls = (!a.completed && isDueToday(a.due_date)) ? 'due-today' : '';
+    return `<tr class="${dueTodayCls}">
       <td><div class="check-circle ${a.completed ? 'done' : ''}" onclick="toggleAssign('${a.id}')"></div></td>
       <td>
         <span class="dl-name" style="cursor:pointer;${a.completed ? 'opacity:.55;text-decoration:line-through' : ''}" onclick="openAssignmentNotes('${a.id}')">${a.name}</span>
@@ -2250,7 +2260,8 @@ function renderTimeline() {
       <div class="week-deadlines">
         ${w.deadlines.length ? w.deadlines.map(a => {
           const c = courseById(a.course_id);
-          return `<div class="week-dl-item"><i class="ti ti-calendar-event"></i><span>${a.name} ${courseTag(c)} <em style="color:var(--text3);font-size:11px">${fmtDate(a.due_date)}</em></span></div>`;
+          const dueTodayCls = isDueToday(a.due_date) ? ' due-today' : '';
+          return `<div class="week-dl-item${dueTodayCls}"><i class="ti ti-calendar-event"></i><span>${a.name} ${courseTag(c)} <em style="color:var(--text3);font-size:11px">${fmtDate(a.due_date)}</em></span></div>`;
         }).join('') : '<span style="font-size:12px;color:var(--text3)">No deadlines this week</span>'}
       </div>
     </div>`;
@@ -2393,7 +2404,7 @@ function renderGrades() {
              <span style="font-size:11px;color:var(--text3)">%</span>
            </div>`;
       }
-      return `<tr>
+      return `<tr class="${isDueToday(a.due_date) ? 'due-today' : ''}">
         <td>${a.name}</td>
         <td class="hide-mobile">${fmtDate(a.due_date)}</td>
         <td>${colLabel}</td>
