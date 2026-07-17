@@ -1793,7 +1793,8 @@ function renderToday() {
     </div>`;
 
   // ── READING QUEUE: next 5 unread, sorted by urgency ──
-  const unread = readings.filter(r => !r.is_read);
+  const semReadings = readings.filter(r => semCourseIds.has(r.course_id));
+  const unread = semReadings.filter(r => !r.is_read);
   // sort: readings with a closer inferred due date first
   const withDue = unread.map(r => {
     const c = courseById(r.course_id);
@@ -1801,8 +1802,8 @@ function renderToday() {
     return { ...r, _inferredDue: d ? new Date(d + 'T12:00:00') : new Date('2099-01-01') };
   }).sort((a,b) => a._inferredDue - b._inferredDue);
   const queue = withDue.slice(0, 5);
-  const readDone = readings.filter(r => r.is_read).length;
-  const readTotal = readings.length;
+  const readDone = semReadings.filter(r => r.is_read).length;
+  const readTotal = semReadings.length;
   const readPct = readTotal ? Math.round(readDone / readTotal * 100) : 0;
 
   document.getElementById('todayReadProgress').textContent = `${readDone} / ${readTotal} complete`;
@@ -1953,21 +1954,26 @@ function renderDashboard() {
   }).join('') || '<p style="color:var(--text3);font-size:13px;padding:8px 0">No upcoming deadlines</p>';
   document.getElementById('upcomingDeadlines').innerHTML = dlHtml;
 
-  // Connections
-  const conns = [
-    { title:'Shared Research Proposal', courses:['EDF 5492','EDG 6362'], desc:'The capstone proposal counts for both courses — coordinate your effort.' },
-    { title:'Conceptual & Theoretical Frameworks', courses:['EDG 6362','EDF 5492'], desc:'EDG 6362 Week 3 builds the framework lens you\'ll apply directly in your EDF 5492 proposal.' },
-    { title:'Research Ethics (IRB / CITI)', courses:['EDF 5492','EME 6920'], desc:'Ethics module in EDF 5492 aligns with CITI Training in EME 6920.' },
-    { title:'APA Writing Standard', courses:['EDF 5492','EDG 6362'], desc:'Both courses require APA 7th edition throughout all written work.' },
-    { title:'Citation Management', courses:['EME 6920','EDF 5492'], desc:'Zotero setup (EME 6920 Unit 1) feeds directly into your literature review.' },
-  ];
-  document.getElementById('connectionsShort').innerHTML = conns.map(c => `
-    <div class="conn-card">
-      <div class="conn-title"><i class="ti ti-link"></i>${c.title}</div>
-      <div class="conn-courses">${c.courses.map(x => x==='EDF 5492' ? `<span class="tag tag-garnet">${x}</span>` : x==='EDG 6362' ? `<span class="tag tag-gold">${x}</span>` : `<span class="tag tag-blue">${x}</span>`).join('')}</div>
-      <div class="conn-desc">${c.desc}</div>
-    </div>
-  `).join('');
+  // Connections — hand-written for Summer 2026's specific course trio;
+  // only meaningful when actually viewing that semester
+  if (curSem.name === 'Summer 2026') {
+    const conns = [
+      { title:'Shared Research Proposal', courses:['EDF 5492','EDG 6362'], desc:'The capstone proposal counts for both courses — coordinate your effort.' },
+      { title:'Conceptual & Theoretical Frameworks', courses:['EDG 6362','EDF 5492'], desc:'EDG 6362 Week 3 builds the framework lens you\'ll apply directly in your EDF 5492 proposal.' },
+      { title:'Research Ethics (IRB / CITI)', courses:['EDF 5492','EME 6920'], desc:'Ethics module in EDF 5492 aligns with CITI Training in EME 6920.' },
+      { title:'APA Writing Standard', courses:['EDF 5492','EDG 6362'], desc:'Both courses require APA 7th edition throughout all written work.' },
+      { title:'Citation Management', courses:['EME 6920','EDF 5492'], desc:'Zotero setup (EME 6920 Unit 1) feeds directly into your literature review.' },
+    ];
+    document.getElementById('connectionsShort').innerHTML = conns.map(c => `
+      <div class="conn-card">
+        <div class="conn-title"><i class="ti ti-link"></i>${c.title}</div>
+        <div class="conn-courses">${c.courses.map(x => x==='EDF 5492' ? `<span class="tag tag-garnet">${x}</span>` : x==='EDG 6362' ? `<span class="tag tag-gold">${x}</span>` : `<span class="tag tag-blue">${x}</span>`).join('')}</div>
+        <div class="conn-desc">${c.desc}</div>
+      </div>
+    `).join('');
+  } else {
+    document.getElementById('connectionsShort').innerHTML = `<p style="color:var(--text3);font-size:13px;padding:8px 0">No cross-course connections added for ${curSem.name || 'this semester'} yet.</p>`;
+  }
 }
 
 // ── ASSIGNMENTS ──────────────────────────────────
