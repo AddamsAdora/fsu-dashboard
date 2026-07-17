@@ -765,7 +765,10 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
         <div class="card" id="upcomingDeadlines"></div>
       </div>
       <div>
-        <div class="section-title"><i class="ti ti-link"></i> Cross-Course Connections</div>
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span><i class="ti ti-link"></i> Cross-Course Connections</span>
+          <button class="btn btn-secondary btn-sm" onclick="openAddConnection()"><i class="ti ti-plus"></i> Add</button>
+        </div>
         <div id="connectionsShort"></div>
       </div>
     </div>
@@ -1236,6 +1239,22 @@ Due Jul 31 at 11:59pm | -/24 pts"></textarea>
   </div>
 </div>
 
+<!-- CONNECTION EDIT MODAL -->
+<div class="modal-overlay" id="modalConnection">
+  <div class="modal">
+    <h2 id="connectionModalTitle">Add Connection</h2>
+    <input type="hidden" id="editConnectionId">
+    <div class="form-row"><div><label>Title</label><input type="text" id="connectionTitle" placeholder="Shared Research Proposal"></div></div>
+    <div class="form-row"><div><label>Description</label><textarea id="connectionDesc" rows="2" placeholder="The capstone proposal counts for both courses — coordinate your effort."></textarea></div></div>
+    <div class="form-row"><div><label>Courses this connects (pick 2 or more)</label><div id="connectionCoursesList" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="deleteConnectionBtn" onclick="deleteConnection()" style="display:none;margin-right:auto;color:#ef4444;border-color:rgba(239,68,68,.4)"><i class="ti ti-trash"></i> Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('modalConnection')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveConnection()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- MILESTONE IMPORT MODAL -->
 <div class="modal-overlay" id="modalImportMilestones">
   <div class="modal" style="max-width:680px">
@@ -1278,7 +1297,7 @@ EME6962	Diagnostic Exam (Qualifying)	0	Spring 1"></textarea>
 // CONFIG + STATE
 // ────────────────────────────────────────────────
 let SB_URL = '', SB_KEY = '';
-let courses = [], assignments = [], readings = [], notes = [], milestones = [], semesters = [];
+let courses = [], assignments = [], readings = [], notes = [], milestones = [], semesters = [], connections = [];
 let viewingSemesterId = localStorage.getItem('viewing_semester_id') || null;
 
 function getViewingSemester() {
@@ -1484,9 +1503,10 @@ async function launch() {
 }
 
 async function loadAll() {
-  [semesters, courses, assignments, readings, notes, milestones] = await Promise.all([
+  [semesters, courses, assignments, readings, notes, milestones, connections] = await Promise.all([
     sbGet('semesters'), sbGet('courses'), sbGet('assignments'),
-    sbGet('readings'), sbGet('notes'), sbGet('milestones','order=sort_order.asc')
+    sbGet('readings'), sbGet('notes'), sbGet('milestones','order=sort_order.asc'),
+    sbGet('connections','order=sort_order.asc')
   ]);
   const raw = localStorage.getItem('discData');
   discData = raw ? JSON.parse(raw) : {};
@@ -1954,25 +1974,22 @@ function renderDashboard() {
   }).join('') || '<p style="color:var(--text3);font-size:13px;padding:8px 0">No upcoming deadlines</p>';
   document.getElementById('upcomingDeadlines').innerHTML = dlHtml;
 
-  // Connections — hand-written for Summer 2026's specific course trio;
-  // only meaningful when actually viewing that semester
-  if (curSem.name === 'Summer 2026') {
-    const conns = [
-      { title:'Shared Research Proposal', courses:['EDF 5492','EDG 6362'], desc:'The capstone proposal counts for both courses — coordinate your effort.' },
-      { title:'Conceptual & Theoretical Frameworks', courses:['EDG 6362','EDF 5492'], desc:'EDG 6362 Week 3 builds the framework lens you\'ll apply directly in your EDF 5492 proposal.' },
-      { title:'Research Ethics (IRB / CITI)', courses:['EDF 5492','EME 6920'], desc:'Ethics module in EDF 5492 aligns with CITI Training in EME 6920.' },
-      { title:'APA Writing Standard', courses:['EDF 5492','EDG 6362'], desc:'Both courses require APA 7th edition throughout all written work.' },
-      { title:'Citation Management', courses:['EME 6920','EDF 5492'], desc:'Zotero setup (EME 6920 Unit 1) feeds directly into your literature review.' },
-    ];
-    document.getElementById('connectionsShort').innerHTML = conns.map(c => `
-      <div class="conn-card">
+  // Connections — now a real editable feature, scoped to whichever semester is being viewed
+  const semConns = connections.filter(c => c.semester_id === curSem.id)
+    .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  if (semConns.length) {
+    document.getElementById('connectionsShort').innerHTML = semConns.map(c => {
+      const ids = (c.course_ids || '').split(',').filter(Boolean);
+      const tagsHtml = ids.map(cid => courseTag(courseById(cid))).join('');
+      return `<div class="conn-card" style="position:relative">
+        <button class="btn btn-secondary btn-sm btn-icon" style="position:absolute;top:10px;right:10px" onclick="editConnection('${c.id}')"><i class="ti ti-pencil"></i></button>
         <div class="conn-title"><i class="ti ti-link"></i>${c.title}</div>
-        <div class="conn-courses">${c.courses.map(x => x==='EDF 5492' ? `<span class="tag tag-garnet">${x}</span>` : x==='EDG 6362' ? `<span class="tag tag-gold">${x}</span>` : `<span class="tag tag-blue">${x}</span>`).join('')}</div>
-        <div class="conn-desc">${c.desc}</div>
-      </div>
-    `).join('');
+        <div class="conn-courses">${tagsHtml}</div>
+        <div class="conn-desc">${c.description || ''}</div>
+      </div>`;
+    }).join('');
   } else {
-    document.getElementById('connectionsShort').innerHTML = `<p style="color:var(--text3);font-size:13px;padding:8px 0">No cross-course connections added for ${curSem.name || 'this semester'} yet.</p>`;
+    document.getElementById('connectionsShort').innerHTML = `<p style="color:var(--text3);font-size:13px;padding:8px 0">No cross-course connections added for ${curSem.name || 'this semester'} yet. Click "Add" to note one.</p>`;
   }
 }
 
@@ -3054,6 +3071,77 @@ async function deleteMilestone() {
   showToast('Milestone deleted');
 }
 
+// ── CROSS-COURSE CONNECTIONS ──────────────────────
+function openAddConnection() {
+  const curSem = getViewingSemester();
+  document.getElementById('editConnectionId').value = '';
+  document.getElementById('connectionTitle').value = '';
+  document.getElementById('connectionDesc').value = '';
+  document.getElementById('connectionModalTitle').textContent = 'Add Connection';
+  document.getElementById('deleteConnectionBtn').style.display = 'none';
+  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+  document.getElementById('connectionCoursesList').innerHTML = semCourses.map(c => `
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;font-size:13px">
+      <input type="checkbox" value="${c.id}" class="connection-course-check" style="width:auto"> ${c.code} — ${c.name}
+    </label>`).join('') || '<span style="font-size:12px;color:var(--text3)">No courses in this semester yet</span>';
+  openModal('modalConnection');
+}
+
+function editConnection(id) {
+  const conn = connections.find(x => x.id === id);
+  if (!conn) return;
+  const selectedIds = (conn.course_ids || '').split(',').filter(Boolean);
+  const sem = semesters.find(s => s.id === conn.semester_id) || {};
+  document.getElementById('editConnectionId').value = id;
+  document.getElementById('connectionTitle').value = conn.title || '';
+  document.getElementById('connectionDesc').value = conn.description || '';
+  document.getElementById('connectionModalTitle').textContent = 'Edit Connection';
+  document.getElementById('deleteConnectionBtn').style.display = 'inline-flex';
+  const semCourses = sem.id ? courses.filter(c => c.semester_id === sem.id) : courses;
+  document.getElementById('connectionCoursesList').innerHTML = semCourses.map(c => `
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;font-size:13px">
+      <input type="checkbox" value="${c.id}" class="connection-course-check" style="width:auto" ${selectedIds.includes(c.id) ? 'checked' : ''}> ${c.code} — ${c.name}
+    </label>`).join('');
+  openModal('modalConnection');
+}
+
+async function saveConnection() {
+  const id = document.getElementById('editConnectionId').value;
+  const title = document.getElementById('connectionTitle').value.trim();
+  const checked = [...document.querySelectorAll('.connection-course-check:checked')].map(el => el.value);
+  if (!title) { showToast('Title required'); return; }
+  if (checked.length < 2) { showToast('Pick at least 2 courses'); return; }
+  const firstCourse = courses.find(c => c.id === checked[0]);
+  const data = {
+    title,
+    description: document.getElementById('connectionDesc').value.trim(),
+    course_ids: checked.join(','),
+    semester_id: firstCourse ? firstCourse.semester_id : null
+  };
+  if (id) { await sbPatch('connections', id, data); Object.assign(connections.find(c => c.id === id), data); }
+  else {
+    const sortOrder = connections.length ? Math.max(...connections.map(c => c.sort_order||0)) + 1 : 0;
+    const r = await sb('POST', 'connections', { ...data, sort_order: sortOrder });
+    connections.push(r[0]);
+  }
+  closeModal('modalConnection');
+  renderDashboard();
+  showToast('Saved!');
+}
+
+async function deleteConnection() {
+  const id = document.getElementById('editConnectionId').value;
+  const conn = connections.find(x => x.id === id);
+  if (!id || !conn) return;
+  if (!confirm(`Delete connection "${conn.title}"? This cannot be undone.`)) return;
+  const ok = await sbDelete('connections', id);
+  if (!ok) { showToast('Delete failed'); return; }
+  connections = connections.filter(x => x.id !== id);
+  closeModal('modalConnection');
+  renderDashboard();
+  showToast('Connection deleted');
+}
+
 // ── IMPORT MILESTONES (paste a course-list style table) ──
 let importMilestonesParsed = [];
 
@@ -3141,19 +3229,24 @@ function renderExport() {
   document.getElementById('exportTitle').textContent = curSem.name || 'Semester Summary';
   document.getElementById('exportSubtitle').textContent = 'Generated ' + new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  const total = assignments.length;
-  const done = assignments.filter(a => a.completed).length;
-  const totalR = readings.length;
-  const readR = readings.filter(r => r.is_read).length;
+  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+  const semCourseIds = new Set(semCourses.map(c => c.id));
+  const semAssignments = assignments.filter(a => semCourseIds.has(a.course_id));
+  const semReadings = readings.filter(r => semCourseIds.has(r.course_id));
+  const semNotes = notes.filter(n => !n.semester_id || n.semester_id === curSem.id);
+
+  const total = semAssignments.length;
+  const done = semAssignments.filter(a => a.completed).length;
+  const totalR = semReadings.length;
+  const readR = semReadings.filter(r => r.is_read).length;
 
   document.getElementById('exportStats').innerHTML = `
     <div class="export-stat"><div class="export-stat-num">${done}/${total}</div><div class="export-stat-label">Assignments Done</div></div>
     <div class="export-stat"><div class="export-stat-num">${readR}/${totalR}</div><div class="export-stat-label">Readings Done</div></div>
-    <div class="export-stat"><div class="export-stat-num">${notes.length}</div><div class="export-stat-label">Research Notes</div></div>
+    <div class="export-stat"><div class="export-stat-num">${semNotes.length}</div><div class="export-stat-label">Research Notes</div></div>
     <div class="export-stat"><div class="export-stat-num">${milestones.filter(m => m.completed).length}/${milestones.length}</div><div class="export-stat-label">Milestones Done</div></div>
   `;
 
-  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
   document.getElementById('exportCourses').innerHTML = semCourses.map(c => {
     const cA = assignments.filter(a => a.course_id === c.id);
     const cDone = cA.filter(a => a.completed).length;
@@ -3208,15 +3301,20 @@ function downloadExportPDF() {
   y = 38;
 
   // ── STAT BOXES ──
-  const totalA = assignments.length;
-  const doneA  = assignments.filter(a => a.completed).length;
-  const totalR = readings.length;
-  const readR  = readings.filter(r => r.is_read).length;
+  const pdfSemCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+  const pdfSemCourseIds = new Set(pdfSemCourses.map(c => c.id));
+  const pdfSemAssignments = assignments.filter(a => pdfSemCourseIds.has(a.course_id));
+  const pdfSemReadings = readings.filter(r => pdfSemCourseIds.has(r.course_id));
+  const pdfSemNotes = notes.filter(n => !n.semester_id || n.semester_id === curSem.id);
+  const totalA = pdfSemAssignments.length;
+  const doneA  = pdfSemAssignments.filter(a => a.completed).length;
+  const totalR = pdfSemReadings.length;
+  const readR  = pdfSemReadings.filter(r => r.is_read).length;
   const mDone  = milestones.filter(m => m.completed).length;
   const stats  = [
     [doneA + '/' + totalA, 'Assignments Done'],
     [readR + '/' + totalR, 'Readings Done'],
-    [notes.length + '', 'Research Notes'],
+    [pdfSemNotes.length + '', 'Research Notes'],
     [mDone + '/' + milestones.length, 'Milestones'],
   ];
   const sw = (contentW - 9) / 4;
