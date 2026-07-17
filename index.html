@@ -1677,7 +1677,9 @@ function renderToday() {
   document.getElementById('todayGreeting').textContent = greet + '!';
   document.getElementById('todaySubtitle').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-  const pending = assignments.filter(a => !a.completed && a.due_date && !a.optional)
+  const curSem = getViewingSemester();
+  const semCourseIds = new Set((curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses).map(c => c.id));
+  const pending = assignments.filter(a => !a.completed && a.due_date && !a.optional && semCourseIds.has(a.course_id))
     .sort((a,b) => new Date(a.due_date) - new Date(b.due_date) || (a.sort_order||0) - (b.sort_order||0));
 
   // ── COUNTDOWN: next deadline ──
@@ -1686,14 +1688,16 @@ function renderToday() {
   if (next) {
     const days = daysUntil(next.due_date);
     const c = courseById(next.course_id);
-    const color = days < 0 ? 'var(--pink)' : days <= 2 ? '#5CB8B2' : 'var(--teal)';
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const color = days < 0 ? 'var(--pink)' : days <= 2 ? (isLight ? '#425563' : '#5CB8B2') : 'var(--teal)';
     const label = days < 0 ? `${Math.abs(days)}d overdue` : days === 0 ? 'due today' : days === 1 ? 'due tomorrow' : `${days} days`;
     cdEl.innerHTML = `
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:800;color:${color};line-height:1">${days < 0 ? '-' : ''}${Math.abs(days)}<span style="font-size:18px;font-weight:600;margin-left:4px">${days === 0 ? 'today' : 'd'}</span></div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:2px;text-align:right">${next.name}</div>
+      <div style="font-size:11px;color:${isLight ? 'rgba(36,16,22,0.68)' : 'rgba(255,255,255,0.55)'};margin-top:2px;text-align:right">${next.name}</div>
       <div style="margin-top:4px;text-align:right">${courseTag(c)}</div>`;
   } else {
-    cdEl.innerHTML = `<div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--teal)">All clear</div>`;
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    cdEl.innerHTML = `<div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:${isLight ? '#425563' : 'var(--teal)'}">All clear</div>`;
   }
 
   // ── NEXT UP: top 3 most urgent ──
@@ -1732,9 +1736,9 @@ function renderToday() {
     const d = new Date(a.due_date + 'T12:00:00');
     return d >= weekStart && d <= weekEnd;
   });
-  const weekReads = readings.filter(r => !r.is_read);
-  const semStart = new Date('2026-05-12');
-  const semEnd   = new Date('2026-08-01');
+  const weekReads = readings.filter(r => !r.is_read && semCourseIds.has(r.course_id));
+  const semStart = curSem.start_date ? new Date(curSem.start_date + 'T12:00:00') : new Date('2026-05-12');
+  const semEnd   = curSem.end_date ? new Date(curSem.end_date + 'T12:00:00') : new Date('2026-08-01');
   const semTotal = (semEnd - semStart) / 86400000;
   const semDone  = (now - semStart) / 86400000;
   const semPct   = Math.min(100, Math.max(0, Math.round(semDone / semTotal * 100)));
@@ -1754,9 +1758,9 @@ function renderToday() {
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${isToday ? 'var(--pink)' : isPast ? 'var(--text3)' : 'var(--text2)'};margin-bottom:4px">${d}</div>
       <div style="width:28px;height:28px;border-radius:50%;margin:0 auto;
         background:${isToday ? 'var(--pink)' : isPast ? 'var(--surface2)' : 'var(--surface)'};
-        border:1px solid ${isToday ? 'var(--pink)' : hasDue ? '#5CB8B2' : 'var(--border)'};
+        border:1px solid ${isToday ? 'var(--pink)' : hasDue ? (isLight ? '#425563' : '#5CB8B2') : 'var(--border)'};
         display:flex;align-items:center;justify-content:center">
-        ${hasDue ? `<div style="width:6px;height:6px;border-radius:50%;background:${isToday ? '#fff' : '#5CB8B2'}"></div>` : ''}
+        ${hasDue ? `<div style="width:6px;height:6px;border-radius:50%;background:${isToday ? '#fff' : (isLight ? '#425563' : '#5CB8B2')}"></div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1805,7 +1809,7 @@ function renderToday() {
     const daysStr = r._inferredDue < new Date('2098-01-01') ? (() => {
       const d = Math.ceil((r._inferredDue - now) / 86400000);
       return d < 0 ? `<span style="color:var(--pink);font-size:10px">overdue</span>` :
-             d === 0 ? `<span style="color:#5CB8B2;font-size:10px">today</span>` :
+             d === 0 ? `<span style="color:${isLight ? '#425563' : '#5CB8B2'};font-size:10px">today</span>` :
              `<span style="font-size:10px;color:var(--text3)">${d}d</span>`;
     })() : '';
     qHtml += `<div class="reading-row" style="padding:10px 18px;cursor:pointer" onclick="toggleReadingById('${r.id}')">
@@ -1886,20 +1890,26 @@ function renderDashboard() {
   const curSem = getViewingSemester();
   document.getElementById('semesterLabel').textContent = curSem.name || '';
 
-  const total = assignments.length;
-  const done = assignments.filter(a => a.completed).length;
-  const totalR = readings.length;
-  const readR = readings.filter(r => r.is_read).length;
+  const semCourses = (curSem.id ? courses.filter(c => c.semester_id === curSem.id) : [...courses])
+    .sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+  const semCourseIds = new Set(semCourses.map(c => c.id));
+
+  const semAssignments = assignments.filter(a => semCourseIds.has(a.course_id));
+  const semReadings = readings.filter(r => semCourseIds.has(r.course_id));
+  const semNotes = notes.filter(n => !n.semester_id || n.semester_id === curSem.id);
+
+  const total = semAssignments.length;
+  const done = semAssignments.filter(a => a.completed).length;
+  const totalR = semReadings.length;
+  const readR = semReadings.filter(r => r.is_read).length;
 
   document.getElementById('statGrid').innerHTML = `
     <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Assignments</div></div>
     <div class="stat-card"><div class="stat-num">${done}</div><div class="stat-label">Completed</div></div>
     <div class="stat-card"><div class="stat-num">${readR}/${totalR}</div><div class="stat-label">Readings Done</div></div>
-    <div class="stat-card"><div class="stat-num">${notes.length}</div><div class="stat-label">Research Notes</div></div>
+    <div class="stat-card"><div class="stat-num">${semNotes.length}</div><div class="stat-label">Research Notes</div></div>
   `;
 
-  const semCourses = (curSem.id ? courses.filter(c => c.semester_id === curSem.id) : [...courses])
-    .sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
   document.getElementById('courseGrid').innerHTML = semCourses.map((c,i) => {
     const cAssign = assignments.filter(a => a.course_id === c.id);
     const cDone = cAssign.filter(a => a.completed).length;
@@ -1925,7 +1935,7 @@ function renderDashboard() {
   enableDragReorder('courseGrid', '.course-card', 'courses', 'courses');
 
   // Upcoming deadlines
-  const upcoming = assignments.filter(a => !a.completed && a.due_date && !a.optional)
+  const upcoming = assignments.filter(a => !a.completed && a.due_date && !a.optional && semCourseIds.has(a.course_id))
     .sort((a,b) => new Date(a.due_date)-new Date(b.due_date)).slice(0,8);
   let dlHtml = upcoming.map(a => {
     const c = courseById(a.course_id);
@@ -2369,6 +2379,7 @@ function renderTimeline() {
   const start = curSem.start_date ? new Date(curSem.start_date + 'T12:00:00') : new Date('2026-05-12');
   const end = curSem.end_date ? new Date(curSem.end_date + 'T12:00:00') : new Date('2026-08-01');
   const today = new Date();
+  const semCourseIds = new Set((curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses).map(c => c.id));
 
   const weeks = [];
   let d = new Date(start);
@@ -2378,12 +2389,12 @@ function renderTimeline() {
     const wEnd = new Date(d); wEnd.setDate(wEnd.getDate() + 6);
     const isCurrent = today >= wStart && today <= wEnd;
     const wDl = assignments.filter(a => {
-      if (!a.due_date) return false;
+      if (!a.due_date || !semCourseIds.has(a.course_id)) return false;
       const dd = new Date(a.due_date + 'T12:00:00');
       return dd >= wStart && dd <= wEnd;
     }).sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
     const wR = readings.filter(r => {
-      if (!r.week_label) return false;
+      if (!r.week_label || !semCourseIds.has(r.course_id)) return false;
       return r.week_label.toLowerCase().includes(wNum.toString()) ||
              r.week_label.toLowerCase().includes('week ' + wNum) ||
              r.week_label.toLowerCase().includes('module ' + wNum);
