@@ -389,7 +389,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 
 /* ── NOTES ── */
 .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-.note-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; cursor: pointer; transition: border-color .12s; backdrop-filter: blur(8px); }
+.note-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; cursor: pointer; transition: border-color .12s; backdrop-filter: blur(8px); position: relative; }
 .note-card:hover { border-color: var(--border2); }
 .note-card.note-garnet { border-left: 3px solid #782F40; }
 .note-card.note-gold   { border-left: 3px solid #CEB888; }
@@ -452,6 +452,10 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .tbl tr:last-child td { border-bottom: none; }
 .tbl tr:hover td { background: #572932; color: #DFD1A7; }
 [data-theme="light"] .tbl tr:hover td { background: rgba(206,184,136,0.4); color: #241016; }
+
+.drag-handle { cursor: grab; color: var(--text3); font-size: 15px; touch-action: none; }
+.drag-handle:active { cursor: grabbing; }
+.dragging { opacity: 0.4; }
 
 /* ── DUE TODAY HIGHLIGHT ── */
 .due-today { border-left: 4px solid #CEB888 !important; background: rgba(206,184,136,0.1) !important; padding-left: 10px !important; }
@@ -780,6 +784,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <div class="card" style="padding:0;overflow:hidden">
       <table class="tbl" id="assignTable">
         <thead><tr>
+          <th style="width:20px"></th>
           <th style="width:36px"></th>
           <th>Assignment</th>
           <th class="hide-mobile">Course</th>
@@ -800,6 +805,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
         <div class="card" style="padding:0;overflow:hidden">
           <table class="tbl">
             <thead><tr>
+              <th style="width:20px"></th>
               <th style="width:36px"></th>
               <th>Assignment</th>
               <th class="hide-mobile">Course</th>
@@ -966,8 +972,11 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
   <!-- DISSERTATION PAGE -->
   <div class="page" id="page-dissertation">
     <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <div><h1>Dissertation Progress</h1><p>Your 3-year arc from cohort to degree</p></div>
-      <button class="btn btn-secondary btn-sm" onclick="loadDefaultMilestones()"><i class="ti ti-template"></i> Load defaults</button>
+      <div><h1>Dissertation Progress</h1><p>Your program arc — edit, add, or import to match how your semesters actually run</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-gold btn-sm" onclick="openImportMilestones()"><i class="ti ti-clipboard-text"></i> Import</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddMilestone()"><i class="ti ti-plus"></i> Add Milestone</button>
+      </div>
     </div>
     <div class="milestone-track" id="milestoneTrack"></div>
   </div>
@@ -1194,6 +1203,61 @@ Due Jul 31 at 11:59pm | -/24 pts"></textarea>
   </div>
 </div>
 
+<!-- MILESTONE EDIT MODAL -->
+<div class="modal-overlay" id="modalMilestone">
+  <div class="modal">
+    <h2 id="milestoneModalTitle">Add Milestone</h2>
+    <input type="hidden" id="editMilestoneId">
+    <div class="form-row"><div><label>Name</label><input type="text" id="milestoneName" placeholder="Qualifying Exam"></div></div>
+    <div class="form-row cols2">
+      <div><label>Term / Semester</label><input type="text" id="milestoneTerm" placeholder="Spring 2027"></div>
+      <div><label>Credits (optional)</label><input type="number" id="milestoneCredits" placeholder="3"></div>
+    </div>
+    <div class="form-row"><div><label>Description (optional)</label><textarea id="milestoneDesc" rows="2" placeholder="EME 6962 Diagnostic Exam"></textarea></div></div>
+    <div class="form-row"><div><label>Target Date (optional)</label><input type="date" id="milestoneDate"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="deleteMilestoneBtn" onclick="deleteMilestone()" style="display:none;margin-right:auto;color:#ef4444;border-color:rgba(239,68,68,.4)"><i class="ti ti-trash"></i> Delete</button>
+      <button class="btn btn-secondary" onclick="closeModal('modalMilestone')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMilestone()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MILESTONE IMPORT MODAL -->
+<div class="modal-overlay" id="modalImportMilestones">
+  <div class="modal" style="max-width:680px">
+    <h2>Import Milestones</h2>
+    <p style="font-size:13px;color:var(--text2);margin-top:-12px;margin-bottom:20px">Paste a course-list style table — one row per line, with columns for course number, name, credits, and typical term (in any order, separated by tabs or multiple spaces). Matches the format of a program course list.</p>
+
+    <div id="importMilestonesStep1">
+      <div class="form-row">
+        <div>
+          <label>Paste your course/milestone list</label>
+          <textarea id="importMilestonesText" rows="10" placeholder="EME6476	Internet-based Inquiry	3	Spring 1
+EDP5216	Theories of Learning & Cognition	3	Spring 1
+EME6962	Diagnostic Exam (Qualifying)	0	Spring 1"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal('modalImportMilestones')">Cancel</button>
+        <button class="btn btn-primary" onclick="parseMilestoneImport()"><i class="ti ti-wand"></i> Parse & Preview</button>
+      </div>
+    </div>
+
+    <div id="importMilestonesStep2" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Found <span id="importMilestonesCount">0</span> items — review before saving</div>
+        <button class="btn btn-secondary btn-sm" onclick="backToImportMilestonesStep1()"><i class="ti ti-arrow-left"></i> Back</button>
+      </div>
+      <div id="importMilestonesPreviewList" style="max-height:360px;overflow-y:auto;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:4px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+        <button class="btn btn-secondary" onclick="closeModal('modalImportMilestones')">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmMilestoneImport()"><i class="ti ti-check"></i> Add Checked</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1345,15 +1409,12 @@ const SEED = {
     { course_code:'EME 6920', title:'A helpful guide to making EndNote and APA Style work together', citation:'APA Style. A helpful guide to making EndNote and APA Style work together (conceptually valuable no matter what tool you use).', week_label:'Unit 1 · Resources' }
   ],
   milestones: [
-    { name:'Program Start', description:'Begin doctoral coursework', icon:'ti ti-rocket', sort_order:1 },
-    { name:'Complete Coursework', description:'Finish all required courses', icon:'ti ti-school', sort_order:2 },
-    { name:'Research Proposal Approved', description:'Proposal accepted by committee', icon:'ti ti-check', sort_order:3 },
-    { name:'Prospectus Defended', description:'Prospectus defense passed', icon:'ti ti-presentation', sort_order:4 },
-    { name:'IRB Approval', description:'Research approved by IRB', icon:'ti ti-shield-check', sort_order:5 },
-    { name:'Data Collection Complete', description:'All data gathered', icon:'ti ti-database', sort_order:6 },
-    { name:'Dissertation Draft Complete', description:'Full draft submitted to advisor', icon:'ti ti-file-text', sort_order:7 },
-    { name:'Dissertation Defense', description:'Final oral defense', icon:'ti ti-award', sort_order:8 },
-    { name:'Degree Conferred', description:'Ed.D. awarded', icon:'ti ti-certificate', sort_order:9 }
+    { name:'Program Start', description:'EDF 5492, EDG 6362, EME 6920', term_label:'Summer 2026', icon:'ti ti-rocket', sort_order:1 },
+    { name:'Qualifying Exam', description:'EME 6962 Diagnostic Exam', term_label:'Spring 2027', icon:'ti ti-certificate', sort_order:2 },
+    { name:'Supervised Research', description:'EDF 5910 (1 cr each term)', term_label:'Fall 2027 – Spring 2028', icon:'ti ti-flask', sort_order:3 },
+    { name:'Preliminary Exam', description:'EDF 8964 Preliminary Doctoral Exam', term_label:'Spring 2028', icon:'ti ti-shield-check', sort_order:4 },
+    { name:'Dissertation', description:'EDF 6980 (24 cr)', term_label:'Summer 2028 – Graduation', icon:'ti ti-file-text', sort_order:5 },
+    { name:'Dissertation Defense', description:'EDF 8985', term_label:'Graduation Term', icon:'ti ti-award', sort_order:6 }
   ]
 };
 
@@ -1489,6 +1550,65 @@ function openDrawer() { document.getElementById('drawer').classList.add('open');
 function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); }
 
 // ── HELPERS ──────────────────────────────────────
+// ── DRAG-TO-REORDER (persists to a sort_order column) ──
+function enableDragReorder(containerId, itemSelector, table, dataArrayName, afterReorder) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  let dragEl = null;
+
+  container.querySelectorAll(itemSelector).forEach(el => {
+    const handle = el.querySelector('.drag-handle');
+    if (!handle) return;
+    handle.setAttribute('draggable', 'true');
+    handle.addEventListener('dragstart', (e) => {
+      dragEl = el;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    handle.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      dragEl = null;
+    });
+  });
+
+  container.ondragover = (e) => {
+    e.preventDefault();
+    if (!dragEl) return;
+    const siblings = [...container.querySelectorAll(`${itemSelector}:not(.dragging)`)];
+    const after = siblings.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = e.clientY - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) return { offset, element: child };
+      return closest;
+    }, { offset: -Infinity, element: null }).element;
+    if (after == null) container.appendChild(dragEl);
+    else container.insertBefore(dragEl, after);
+  };
+
+  container.ondrop = async (e) => {
+    e.preventDefault();
+    if (!dragEl) return;
+    const items = [...container.querySelectorAll(itemSelector)];
+    const dataArr = getReorderableArray(dataArrayName);
+    for (let i = 0; i < items.length; i++) {
+      const id = items[i].dataset.id;
+      const item = dataArr.find(x => x.id === id);
+      if (item && item.sort_order !== i) {
+        item.sort_order = i;
+        await sbPatch(table, id, { sort_order: i });
+      }
+    }
+    if (afterReorder) afterReorder();
+  };
+}
+function getReorderableArray(name) {
+  if (name === 'assignments') return assignments;
+  if (name === 'readings') return readings;
+  if (name === 'notes') return notes;
+  if (name === 'courses') return courses;
+  return [];
+}
+
 function courseById(id) { return courses.find(c => c.id === id) || {}; }
 function colorToTagClass(color) {
   return color === 'gold' ? 'tag-gold' : color === 'blue' ? 'tag-blue' : 'tag-garnet';
@@ -1500,6 +1620,9 @@ function courseTag(c) {
 function filterBtnClass(color) {
   if (!color) return '';
   return color === 'gold' ? 'fb-gold' : color === 'blue' ? 'fb-blue' : 'fb-garnet';
+}
+function slugify(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 function fmtDate(d) {
   if (!d) return '—';
@@ -1548,7 +1671,7 @@ function renderToday() {
   document.getElementById('todaySubtitle').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   const pending = assignments.filter(a => !a.completed && a.due_date && !a.optional)
-    .sort((a,b) => new Date(a.due_date) - new Date(b.due_date));
+    .sort((a,b) => new Date(a.due_date) - new Date(b.due_date) || (a.sort_order||0) - (b.sort_order||0));
 
   // ── COUNTDOWN: next deadline ──
   const next = pending[0];
@@ -1768,14 +1891,16 @@ function renderDashboard() {
     <div class="stat-card"><div class="stat-num">${notes.length}</div><div class="stat-label">Research Notes</div></div>
   `;
 
-  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+  const semCourses = (curSem.id ? courses.filter(c => c.semester_id === curSem.id) : [...courses])
+    .sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
   document.getElementById('courseGrid').innerHTML = semCourses.map((c,i) => {
     const cAssign = assignments.filter(a => a.course_id === c.id);
     const cDone = cAssign.filter(a => a.completed).length;
     const pct = cAssign.length ? Math.round(cDone/cAssign.length*100) : 0;
     const next = cAssign.filter(a => !a.completed && a.due_date && !a.optional).sort((a,b) => new Date(a.due_date)-new Date(b.due_date))[0];
     const cardClass = c.color === 'gold' ? 'c-gold' : c.color === 'blue' ? 'c-blue' : 'c-garnet';
-    return `<div class="course-card ${cardClass}">
+    return `<div class="course-card ${cardClass}" data-id="${c.id}">
+      <i class="ti ti-grip-vertical drag-handle" style="position:absolute;top:12px;right:12px;color:rgba(255,255,255,0.6);z-index:2"></i>
       <div class="course-code">${c.code} · ${c.credits} cr</div>
       <div class="course-name">${c.name}</div>
       <div class="course-meta">
@@ -1790,6 +1915,7 @@ function renderDashboard() {
       </div>
     </div>`;
   }).join('');
+  enableDragReorder('courseGrid', '.course-card', 'courses', 'courses');
 
   // Upcoming deadlines
   const upcoming = assignments.filter(a => !a.completed && a.due_date && !a.optional)
@@ -1850,6 +1976,7 @@ function renderAssignments() {
     if (c) list = list.filter(a => a.course_id === c.id);
   }
   list.sort((a,b) => {
+    if ((a.sort_order || 0) !== (b.sort_order || 0)) return (a.sort_order || 0) - (b.sort_order || 0);
     if (!a.due_date && !b.due_date) return 0;
     if (!a.due_date) return 1;
     if (!b.due_date) return -1;
@@ -1869,7 +1996,8 @@ function renderAssignments() {
     const c = courseById(a.course_id);
     const hasNotes = !!(a.notes && a.notes.trim()) || notes.some(n => n.assignment_id === a.id);
     const dueTodayCls = (!a.completed && isDueToday(a.due_date)) ? 'due-today' : '';
-    return `<tr class="${dueTodayCls}">
+    return `<tr class="${dueTodayCls}" data-id="${a.id}">
+      <td>${a.completed ? '' : '<i class="ti ti-grip-vertical drag-handle"></i>'}</td>
       <td><div class="check-circle ${a.completed ? 'done' : ''}" onclick="toggleAssign('${a.id}')"></div></td>
       <td>
         <span class="dl-name" style="cursor:pointer;${a.completed ? 'opacity:.55;text-decoration:line-through' : ''}" onclick="openAssignmentNotes('${a.id}')">${a.name}</span>
@@ -1885,7 +2013,8 @@ function renderAssignments() {
 
   document.getElementById('assignBody').innerHTML =
     pending.map(assignRow).join('') ||
-    '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">No pending assignments</td></tr>';
+    '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">No pending assignments</td></tr>';
+  enableDragReorder('assignBody', 'tr[data-id]', 'assignments', 'assignments', () => { if (currentPage==='today') renderToday(); if (currentPage==='dashboard') renderDashboard(); });
 
   const sec = document.getElementById('assignCompletedSection');
   if (completed.length) {
@@ -2072,10 +2201,12 @@ function renderReadings() {
   });
 
   let activeHtml = '';
+  const readGroupIds = [];
   Object.entries(activeGrouped).forEach(([code, weeks]) => {
     const courseObj = courses.find(c => c.code === code);
     activeHtml += `<div style="margin-bottom:20px"><div class="section-title" style="margin-bottom:8px"><i class="ti ti-books"></i>${code}</div>`;
     Object.entries(weeks).forEach(([wk, rs]) => {
+      rs.sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const dueDate = courseObj ? inferReadingDueDate(courseObj.id, wk) : null;
       const days = dueDate ? daysUntil(dueDate) : null;
       const dueDot = days === null ? '' : days < 0 ? 'overdue' : days <= 3 ? 'soon' : 'ok';
@@ -2084,10 +2215,14 @@ function renderReadings() {
         ? `<span style="font-size:11px;font-weight:600;color:${dueColor};margin-left:8px"><i class="ti ti-calendar-due" style="font-size:11px;vertical-align:middle"></i> Due ${fmtDate(dueDate)}${days !== null && days >= 0 && days <= 7 ? ` · ${days === 0 ? 'today' : days + 'd'}` : ''}</span>`
         : '';
       activeHtml += `<div style="font-size:12px;font-weight:600;color:var(--text3);margin:8px 0 4px;display:flex;align-items:center">${wk}${dueBadge}</div>`;
+      const groupId = 'readGroup-' + slugify(code + '-' + wk);
+      readGroupIds.push(groupId);
+      activeHtml += `<div id="${groupId}">`;
       rs.forEach(r => {
         const rCourse = courseById(r.course_id);
         const rCheckClass = rCourse.color === 'gold' ? 'cc-gold' : rCourse.color === 'blue' ? 'cc-blue' : 'cc-garnet';
-        activeHtml += `<div class="reading-row">
+        activeHtml += `<div class="reading-row" data-id="${r.id}">
+          <i class="ti ti-grip-vertical drag-handle" style="margin-top:4px"></i>
           <div class="check-circle ${rCheckClass}" onclick="toggleReading('${r.id}')" style="margin-top:2px"></div>
           <div class="reading-text">
             <div class="reading-title">${r.title}${r.url ? ` <a href="${r.url}" target="_blank" style="font-size:11px;color:var(--garnet);margin-left:6px"><i class="ti ti-external-link"></i></a>` : ''}</div>
@@ -2096,6 +2231,7 @@ function renderReadings() {
           <button class="btn btn-secondary btn-sm btn-icon" onclick="editReading('${r.id}')"><i class="ti ti-pencil"></i></button>
         </div>`;
       });
+      activeHtml += `</div>`;
     });
     activeHtml += '</div>';
   });
@@ -2142,6 +2278,7 @@ function renderReadings() {
 
   document.getElementById('readingList').innerHTML =
     (activeHtml || '<p style="color:var(--text3)">No unread readings — nice work!</p>') + completedHtml;
+  readGroupIds.forEach(id => enableDragReorder(id, '.reading-row', 'readings', 'readings'));
 }
 
 let _readCompletedVisible = true;
@@ -2237,7 +2374,7 @@ function renderTimeline() {
       if (!a.due_date) return false;
       const dd = new Date(a.due_date + 'T12:00:00');
       return dd >= wStart && dd <= wEnd;
-    });
+    }).sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
     const wR = readings.filter(r => {
       if (!r.week_label) return false;
       return r.week_label.toLowerCase().includes(wNum.toString()) ||
@@ -2413,10 +2550,10 @@ function renderGrades() {
     }
 
     const sortedAssign = [...cAssign].sort((a,b) => {
-      if (!a.due_date && !b.due_date) return 0;
+      if (!a.due_date && !b.due_date) return (a.sort_order||0) - (b.sort_order||0);
       if (!a.due_date) return 1;
       if (!b.due_date) return -1;
-      return new Date(a.due_date) - new Date(b.due_date);
+      return new Date(a.due_date) - new Date(b.due_date) || (a.sort_order||0) - (b.sort_order||0);
     });
 
     return `<div class="card" style="margin-bottom:16px">
@@ -2454,7 +2591,10 @@ function renderNotes() {
     `<button class="filter-btn ${(f === 'All' ? currentNoteFilter === 'all' : currentNoteFilter === f) ? 'active' : ''}" onclick="setNoteFilter('${f}')">${f}</button>`
   ).join('');
 
-  let list = [...notes].sort((a,b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+  let list = [...notes].sort((a,b) => {
+    if ((a.sort_order || 0) !== (b.sort_order || 0)) return (a.sort_order || 0) - (b.sort_order || 0);
+    return new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at);
+  });
   if (currentNoteFilter !== 'all') list = list.filter(n => n.tags && n.tags.split(',').map(t => t.trim()).includes(currentNoteFilter));
   if (search) list = list.filter(n => (n.title||'').toLowerCase().includes(search) || n.body.toLowerCase().includes(search) || (n.tags||'').toLowerCase().includes(search));
 
@@ -2463,7 +2603,8 @@ function renderNotes() {
     const tags = n.tags ? n.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     const dt = new Date(n.updated_at || n.created_at);
     const noteColorClass = c && c.color === 'gold' ? 'note-gold' : c && c.color === 'blue' ? 'note-blue' : c ? 'note-garnet' : '';
-    return `<div class="note-card ${noteColorClass}" onclick="editNote('${n.id}')">
+    return `<div class="note-card ${noteColorClass}" data-id="${n.id}" onclick="editNote('${n.id}')">
+      <i class="ti ti-grip-vertical drag-handle" onclick="event.stopPropagation()" style="position:absolute;top:10px;right:10px"></i>
       <div class="note-title">${n.title || 'Untitled'}</div>
       <div class="note-body">${n.body}</div>
       <div class="note-footer">
@@ -2474,6 +2615,7 @@ function renderNotes() {
       </div>
     </div>`;
   }).join('') || '<p style="color:var(--text3);grid-column:1/-1">No notes yet. Click "New Note" to start your research journal.</p>';
+  enableDragReorder('notesGrid', '.note-card', 'notes', 'notes');
 }
 
 function setNoteFilter(f) { currentNoteFilter = f === 'All' ? 'all' : f; renderNotes(); }
@@ -2727,17 +2869,21 @@ async function saveApaToNotes() {
 
 // ── DISSERTATION ─────────────────────────────────
 function renderDissertation() {
-  document.getElementById('milestoneTrack').innerHTML = milestones.map(m => `
-    <div class="milestone-item ${m.completed ? 'done' : ''}" onclick="toggleMilestone('${m.id}')">
-      <div class="milestone-icon"><i class="${m.icon || 'ti ti-target'}"></i></div>
-      <div style="flex:1">
-        <div class="milestone-name">${m.name}</div>
+  const sorted = [...milestones].sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  document.getElementById('milestoneTrack').innerHTML = sorted.map(m => `
+    <div class="milestone-item ${m.completed ? 'done' : ''}" data-id="${m.id}">
+      <i class="ti ti-grip-vertical drag-handle" style="margin-right:4px"></i>
+      <div class="milestone-icon" onclick="toggleMilestone('${m.id}')" style="cursor:pointer"><i class="${m.icon || 'ti ti-target'}"></i></div>
+      <div style="flex:1;cursor:pointer" onclick="toggleMilestone('${m.id}')">
+        <div class="milestone-name">${m.name}${m.term_label ? ` <span class="tag tag-gray" style="font-size:10px;vertical-align:middle">${m.term_label}</span>` : ''}${m.credits ? ` <span class="tag tag-gray" style="font-size:10px;vertical-align:middle">${m.credits} cr</span>` : ''}</div>
         <div class="milestone-desc">${m.description || ''}</div>
         ${m.target_date ? `<div class="milestone-date"><i class="ti ti-calendar" style="font-size:12px"></i> Target: ${fmtDate(m.target_date)}</div>` : ''}
       </div>
-      <div>${m.completed ? '<span class="tag tag-green"><i class="ti ti-check"></i> Done</span>' : '<span class="tag tag-gray">Pending</span>'}</div>
+      <div onclick="toggleMilestone('${m.id}')" style="cursor:pointer">${m.completed ? '<span class="tag tag-green"><i class="ti ti-check"></i> Done</span>' : '<span class="tag tag-gray">Pending</span>'}</div>
+      <button class="btn btn-secondary btn-sm btn-icon" onclick="editMilestone('${m.id}')"><i class="ti ti-pencil"></i></button>
     </div>
-  `).join('') || '<p style="color:var(--text3);padding:16px">No milestones yet. Click "Load defaults" to get started.</p>';
+  `).join('') || '<p style="color:var(--text3);padding:16px">No milestones yet. Click "Add Milestone" or "Import" to get started.</p>';
+  enableDragReorder('milestoneTrack', '.milestone-item', 'milestones', 'milestones');
 }
 
 async function toggleMilestone(id) {
@@ -2748,11 +2894,145 @@ async function toggleMilestone(id) {
   renderDissertation();
 }
 
-async function loadDefaultMilestones() {
-  if (milestones.length) { showToast('Milestones already loaded'); return; }
-  for (const m of SEED.milestones) { const r = await sb('POST', 'milestones', m); milestones.push(r[0]); }
+function openAddMilestone() {
+  document.getElementById('editMilestoneId').value = '';
+  document.getElementById('milestoneName').value = '';
+  document.getElementById('milestoneTerm').value = '';
+  document.getElementById('milestoneCredits').value = '';
+  document.getElementById('milestoneDesc').value = '';
+  document.getElementById('milestoneDate').value = '';
+  document.getElementById('milestoneModalTitle').textContent = 'Add Milestone';
+  document.getElementById('deleteMilestoneBtn').style.display = 'none';
+  openModal('modalMilestone');
+}
+
+function editMilestone(id) {
+  const m = milestones.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('editMilestoneId').value = id;
+  document.getElementById('milestoneName').value = m.name || '';
+  document.getElementById('milestoneTerm').value = m.term_label || '';
+  document.getElementById('milestoneCredits').value = m.credits ?? '';
+  document.getElementById('milestoneDesc').value = m.description || '';
+  document.getElementById('milestoneDate').value = m.target_date || '';
+  document.getElementById('milestoneModalTitle').textContent = 'Edit Milestone';
+  document.getElementById('deleteMilestoneBtn').style.display = 'inline-flex';
+  openModal('modalMilestone');
+}
+
+async function saveMilestone() {
+  const id = document.getElementById('editMilestoneId').value;
+  const data = {
+    name: document.getElementById('milestoneName').value.trim(),
+    term_label: document.getElementById('milestoneTerm').value.trim(),
+    credits: parseFloat(document.getElementById('milestoneCredits').value) || null,
+    description: document.getElementById('milestoneDesc').value.trim(),
+    target_date: document.getElementById('milestoneDate').value || null
+  };
+  if (!data.name) { showToast('Milestone name required'); return; }
+  if (id) { await sbPatch('milestones', id, data); Object.assign(milestones.find(m => m.id === id), data); }
+  else {
+    const sortOrder = milestones.length ? Math.max(...milestones.map(m => m.sort_order||0)) + 1 : 0;
+    const r = await sb('POST', 'milestones', { ...data, completed: false, sort_order: sortOrder });
+    milestones.push(r[0]);
+  }
+  closeModal('modalMilestone');
   renderDissertation();
-  showToast('Default milestones loaded!');
+  showToast('Saved!');
+}
+
+async function deleteMilestone() {
+  const id = document.getElementById('editMilestoneId').value;
+  const m = milestones.find(x => x.id === id);
+  if (!id || !m) return;
+  if (!confirm(`Delete milestone "${m.name}"? This cannot be undone.`)) return;
+  const ok = await sbDelete('milestones', id);
+  if (!ok) { showToast('Delete failed'); return; }
+  milestones = milestones.filter(x => x.id !== id);
+  closeModal('modalMilestone');
+  renderDissertation();
+  showToast('Milestone deleted');
+}
+
+// ── IMPORT MILESTONES (paste a course-list style table) ──
+let importMilestonesParsed = [];
+
+function openImportMilestones() {
+  document.getElementById('importMilestonesText').value = '';
+  document.getElementById('importMilestonesStep1').style.display = 'block';
+  document.getElementById('importMilestonesStep2').style.display = 'none';
+  importMilestonesParsed = [];
+  openModal('modalImportMilestones');
+}
+
+function backToImportMilestonesStep1() {
+  document.getElementById('importMilestonesStep1').style.display = 'block';
+  document.getElementById('importMilestonesStep2').style.display = 'none';
+}
+
+function parseMilestoneImport() {
+  const raw = document.getElementById('importMilestonesText').value.trim();
+  if (!raw) { showToast('Paste some text first'); return; }
+
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  importMilestonesParsed = lines.map(line => {
+    // Split on tabs, or 2+ spaces, or pipes — whichever the paste uses
+    const parts = line.split(/\t|\s{2,}|\s*\|\s*/).map(p => p.trim()).filter(Boolean);
+    let code = '', name = '', credits = null, term = '';
+    if (parts.length >= 4) {
+      [code, name, , term] = parts;
+      const creditsMatch = parts[2].match(/(\d+(\.\d+)?)/);
+      credits = creditsMatch ? parseFloat(creditsMatch[1]) : null;
+    } else if (parts.length === 3) {
+      [code, name, term] = parts;
+    } else {
+      name = line;
+    }
+    const fullName = code ? `${code} ${name}`.trim() : name;
+    return { name: fullName, term_label: term, credits, description: '', _checked: true };
+  }).filter(m => m.name);
+
+  if (!importMilestonesParsed.length) { showToast('Nothing detected — try adjusting the text'); return; }
+
+  document.getElementById('importMilestonesCount').textContent = importMilestonesParsed.length;
+  renderMilestoneImportPreview();
+  document.getElementById('importMilestonesStep1').style.display = 'none';
+  document.getElementById('importMilestonesStep2').style.display = 'block';
+}
+
+function renderMilestoneImportPreview() {
+  const list = document.getElementById('importMilestonesPreviewList');
+  list.innerHTML = importMilestonesParsed.map((m, i) => `
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px">
+      <input type="checkbox" ${m._checked ? 'checked' : ''} onchange="importMilestonesParsed[${i}]._checked=this.checked" style="margin-top:4px">
+      <div style="flex:1">
+        <input type="text" value="${escHtml(m.name)}" style="font-size:13px;font-weight:600;border:none;background:transparent;padding:0;width:100%;color:var(--text)"
+          oninput="importMilestonesParsed[${i}].name=this.value">
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap">
+          <input type="text" placeholder="term" value="${escHtml(m.term_label||'')}" style="width:100px;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:2px 4px"
+            oninput="importMilestonesParsed[${i}].term_label=this.value">
+          <input type="number" placeholder="credits" value="${m.credits ?? ''}" style="width:70px;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:2px 4px"
+            oninput="importMilestonesParsed[${i}].credits=parseFloat(this.value)||null">
+        </div>
+      </div>
+    </div>
+  `).join('') || '<div style="text-align:center;padding:20px;color:var(--text3)">Nothing to review</div>';
+}
+
+async function confirmMilestoneImport() {
+  const chosen = importMilestonesParsed.filter(m => m._checked && m.name);
+  if (!chosen.length) { closeModal('modalImportMilestones'); showToast('Nothing added'); return; }
+  let sortOrder = milestones.length ? Math.max(...milestones.map(m => m.sort_order||0)) + 1 : 0;
+  let added = 0;
+  for (const m of chosen) {
+    const { _checked, ...rest } = m;
+    const result = await sb('POST', 'milestones', { ...rest, completed: false, sort_order: sortOrder++ });
+    milestones.push(result[0]);
+    added++;
+  }
+  closeModal('modalImportMilestones');
+  renderDissertation();
+  showToast(`Added ${added} milestone${added !== 1 ? 's' : ''}!`);
 }
 
 // ── EXPORT ───────────────────────────────────────
