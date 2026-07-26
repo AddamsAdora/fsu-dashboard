@@ -673,6 +673,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <a href="#" onclick="nav('readings')" id="nav-readings"><i class="ti ti-books"></i> Readings</a>
     <a href="#" onclick="nav('timeline')" id="nav-timeline"><i class="ti ti-calendar"></i> Timeline</a>
     <a href="#" onclick="nav('notes')" id="nav-notes"><i class="ti ti-notes"></i> Notes</a>
+    <a href="#" onclick="nav('discussion')" id="nav-discussion"><i class="ti ti-message-circle"></i> Disc.</a>
     <a href="#" onclick="nav('apa')" id="nav-apa"><i class="ti ti-quote"></i> APA</a>
     <a href="#" onclick="nav('dissertation')" id="nav-dissertation"><i class="ti ti-certificate"></i> Diss.</a>
     <a href="#" onclick="nav('export')" id="nav-export"><i class="ti ti-file-export"></i> Export</a>
@@ -696,6 +697,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <a href="#" onclick="nav('readings');closeDrawer()"><i class="ti ti-books"></i> Readings</a>
     <a href="#" onclick="nav('timeline');closeDrawer()"><i class="ti ti-calendar"></i> Timeline</a>
     <a href="#" onclick="nav('notes');closeDrawer()"><i class="ti ti-notes"></i> Notes</a>
+    <a href="#" onclick="nav('discussion');closeDrawer()"><i class="ti ti-message-circle"></i> Discussion Tracker</a>
     <a href="#" onclick="nav('apa');closeDrawer()"><i class="ti ti-quote"></i> APA Builder</a>
     <a href="#" onclick="nav('dissertation');closeDrawer()"><i class="ti ti-certificate"></i> Dissertation</a>
     <a href="#" onclick="nav('export');closeDrawer()"><i class="ti ti-file-export"></i> Export</a>
@@ -905,6 +907,12 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
       <input type="text" id="noteSearch" placeholder="Search notes…" oninput="renderNotes()" style="max-width:320px">
     </div>
     <div class="notes-grid" id="notesGrid"></div>
+  </div>
+
+  <!-- DISCUSSION TRACKER PAGE -->
+  <div class="page" id="page-discussion">
+    <div class="page-header"><h1>Discussion Tracker</h1><p>Weekly post counts — lowest week is automatically dropped once 9 graded weeks are logged</p></div>
+    <div id="discGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px"></div>
   </div>
 
   <!-- APA BUILDER PAGE -->
@@ -1707,6 +1715,7 @@ function renderPage(page) {
   else if (page === 'readings') renderReadings();
   else if (page === 'timeline') renderTimeline();
   else if (page === 'notes') renderNotes();
+  else if (page === 'discussion') renderDiscussion();
   else if (page === 'dissertation') renderDissertation();
   else if (page === 'export') renderExport();
 }
