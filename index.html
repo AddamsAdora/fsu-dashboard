@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400;1,700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400;1,700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -45,6 +45,8 @@
   --radius-md:  10px;
   --radius-lg:  16px;
   --nav-h:      58px;
+  --app-font:   'Barlow', sans-serif;
+  --app-zoom:   1;
 }
 
 /* light mode (day view) — FSU Gold dominates the chrome/surfaces;
@@ -65,12 +67,13 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Barlow', sans-serif;
+  font-family: var(--app-font, 'Barlow', sans-serif);
   background: #1a0b0e;
   color: var(--text);
   min-height: 100vh;
   font-size: 14px;
   line-height: 1.6;
+  zoom: var(--app-zoom, 1);
 }
 
 /* mesh gradient background */
@@ -162,6 +165,11 @@ body::before {
 .drawer-links a i { font-size: 17px; }
 .drawer-sep { height: 1px; background: var(--border); margin: 10px 20px; }
 .drawer-dark { display: flex; align-items: center; gap: 10px; padding: 11px 20px; color: var(--text2); font-size: 14px; font-weight: 500; }
+.drawer-display { padding: 4px 20px 16px; }
+.drawer-display-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.drawer-select-label { display: block; font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+.drawer-select { width: 100%; padding: 6px 8px; font-size: 12px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.25); }
+.drawer-select option { background: #2b1119; color: #fff; }
 .toggle-switch { position: relative; width: 40px; height: 22px; margin-left: auto; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
 .toggle-track { position: absolute; inset: 0; border-radius: 11px; background: var(--surface3); cursor: pointer; transition: background .2s; }
@@ -279,7 +287,7 @@ input:checked + .toggle-track:before { transform: translateX(18px); }
   padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
   background: var(--surface); color: var(--text2);
   font-size: 12px; font-weight: 600; cursor: pointer;
-  transition: all .12s; font-family: 'Barlow', sans-serif; text-transform: uppercase; letter-spacing: .4px;
+  transition: all .12s; font-family: var(--app-font); text-transform: uppercase; letter-spacing: .4px;
 }
 .filter-btn:hover { border-color: var(--pink); color: var(--pink); }
 .filter-btn.active { background: #101820; border-color: #5CB8B2; color: #5CB8B2; }
@@ -304,7 +312,7 @@ input:checked + .toggle-track:before { transform: translateX(18px); }
 [data-theme="light"] .filter-btn.fb-blue.active { color: #2e3943; }
 
 /* ── BUTTONS ── */
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 600; transition: all .12s; text-transform: uppercase; letter-spacing: .3px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-family: var(--app-font); font-size: 13px; font-weight: 600; transition: all .12s; text-transform: uppercase; letter-spacing: .3px; }
 .btn-primary { background: var(--pink); color: #fff; }
 .btn-primary:hover { background: var(--pink-dim); }
 .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
@@ -316,7 +324,7 @@ input:checked + .toggle-track:before { transform: translateX(18px); }
 
 /* ── FORM ELEMENTS ── */
 input, textarea, select {
-  font-family: 'Barlow', sans-serif; font-size: 13px;
+  font-family: var(--app-font); font-size: 13px;
   background: var(--surface); color: var(--text);
   border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: 8px 12px; width: 100%;
@@ -532,6 +540,10 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 }
 [data-theme="light"] .drawer-links a,
 [data-theme="light"] .drawer-dark { color: rgba(36,16,22,0.78); }
+[data-theme="light"] .drawer-display-label { color: rgba(36,16,22,0.7); }
+[data-theme="light"] .drawer-select-label { color: rgba(36,16,22,0.7); }
+[data-theme="light"] .drawer-select { background: rgba(255,255,255,0.5); color: #241016; border-color: rgba(87,41,50,0.3); }
+[data-theme="light"] .drawer-select option { background: #fff; color: #241016; }
 [data-theme="light"] .drawer-links a:hover,
 [data-theme="light"] .drawer-links a.active { background: rgba(120,47,64,0.85); color: #fff; }
 [data-theme="light"] .topnav-title { color: #241016; }
@@ -696,6 +708,29 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
       <input type="checkbox" id="darkToggleDrawer" onchange="toggleDarkMode()">
       <span class="toggle-track"></span>
     </label>
+  </div>
+  <div class="drawer-sep"></div>
+  <div class="drawer-display">
+    <div class="drawer-display-label">Display</div>
+    <div style="margin-bottom:10px">
+      <label class="drawer-select-label">Font size</label>
+      <select id="fontSizeSelect" class="drawer-select" onchange="setFontScale(this.value)">
+        <option value="0.9">Small</option>
+        <option value="1">Default</option>
+        <option value="1.15">Large</option>
+        <option value="1.3">Extra Large</option>
+      </select>
+    </div>
+    <div>
+      <label class="drawer-select-label">Font face</label>
+      <select id="fontFaceSelect" class="drawer-select" onchange="setFontFace(this.value)">
+        <option value="'Barlow', sans-serif">Barlow (default)</option>
+        <option value="'Atkinson Hyperlegible', sans-serif">Atkinson Hyperlegible</option>
+        <option value="Georgia, 'Times New Roman', serif">Serif (Georgia)</option>
+        <option value="'Courier New', monospace">Monospace</option>
+        <option value="system-ui, -apple-system, sans-serif">System Default</option>
+      </select>
+    </div>
   </div>
 </div>
 
@@ -1572,6 +1607,7 @@ async function launch() {
   if (!semesters.length) await seedData();
   renderSemesterSwitcher();
   initDark();
+  initFontPrefs();
   nav('today');
 }
 
@@ -1624,6 +1660,26 @@ function applyDark(dark) {
   if (btn) btn.innerHTML = dark ? '<i class="ti ti-sun"></i>' : '<i class="ti ti-moon"></i>';
   const tog = document.getElementById('darkToggleDrawer');
   if (tog) tog.checked = !dark;
+}
+
+// ── FONT CUSTOMIZATION ────────────────────────────
+function initFontPrefs() {
+  const savedScale = localStorage.getItem('fontScale') || '1';
+  const savedFace = localStorage.getItem('fontFace') || "'Barlow', sans-serif";
+  document.documentElement.style.setProperty('--app-zoom', savedScale);
+  document.documentElement.style.setProperty('--app-font', savedFace);
+  const sizeSel = document.getElementById('fontSizeSelect');
+  const faceSel = document.getElementById('fontFaceSelect');
+  if (sizeSel) sizeSel.value = savedScale;
+  if (faceSel) faceSel.value = savedFace;
+}
+function setFontScale(scale) {
+  document.documentElement.style.setProperty('--app-zoom', scale);
+  localStorage.setItem('fontScale', scale);
+}
+function setFontFace(face) {
+  document.documentElement.style.setProperty('--app-font', face);
+  localStorage.setItem('fontFace', face);
 }
 
 // ── NAV ──────────────────────────────────────────
@@ -4123,6 +4179,7 @@ async function syncCourseColors() {
   } else {
     document.getElementById('setupScreen').style.display = 'flex';
     initDark();
+    initFontPrefs();
   }
 })();
 </script>
