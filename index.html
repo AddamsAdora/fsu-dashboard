@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400;1,700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400;1,700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -673,7 +673,6 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <a href="#" onclick="nav('readings')" id="nav-readings"><i class="ti ti-books"></i> Readings</a>
     <a href="#" onclick="nav('timeline')" id="nav-timeline"><i class="ti ti-calendar"></i> Timeline</a>
     <a href="#" onclick="nav('notes')" id="nav-notes"><i class="ti ti-notes"></i> Notes</a>
-    <a href="#" onclick="nav('discussion')" id="nav-discussion"><i class="ti ti-message-circle"></i> Disc.</a>
     <a href="#" onclick="nav('apa')" id="nav-apa"><i class="ti ti-quote"></i> APA</a>
     <a href="#" onclick="nav('dissertation')" id="nav-dissertation"><i class="ti ti-certificate"></i> Diss.</a>
     <a href="#" onclick="nav('export')" id="nav-export"><i class="ti ti-file-export"></i> Export</a>
@@ -697,7 +696,6 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <a href="#" onclick="nav('readings');closeDrawer()"><i class="ti ti-books"></i> Readings</a>
     <a href="#" onclick="nav('timeline');closeDrawer()"><i class="ti ti-calendar"></i> Timeline</a>
     <a href="#" onclick="nav('notes');closeDrawer()"><i class="ti ti-notes"></i> Notes</a>
-    <a href="#" onclick="nav('discussion');closeDrawer()"><i class="ti ti-message-circle"></i> Discussion Tracker</a>
     <a href="#" onclick="nav('apa');closeDrawer()"><i class="ti ti-quote"></i> APA Builder</a>
     <a href="#" onclick="nav('dissertation');closeDrawer()"><i class="ti ti-certificate"></i> Dissertation</a>
     <a href="#" onclick="nav('export');closeDrawer()"><i class="ti ti-file-export"></i> Export</a>
@@ -909,12 +907,6 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <div class="notes-grid" id="notesGrid"></div>
   </div>
 
-  <!-- DISCUSSION TRACKER PAGE -->
-  <div class="page" id="page-discussion">
-    <div class="page-header"><h1>Discussion Tracker</h1><p>Weekly post counts — lowest week is automatically dropped once 9 graded weeks are logged</p></div>
-    <div id="discGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px"></div>
-  </div>
-
   <!-- APA BUILDER PAGE -->
   <div class="page" id="page-apa">
     <div class="page-header"><h1>APA Reference Builder</h1><p>7th edition — build a citation by filling in the fields</p></div>
@@ -1087,6 +1079,10 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
         <input type="checkbox" id="assignOptional" style="width:auto">
         Optional (not required)
       </label>
+    </div>
+    <div class="form-row">
+      <label>Required responses (optional — for discussions needing multiple replies)</label>
+      <input type="number" id="assignResponsesRequired" placeholder="e.g. 3" min="0" style="width:100px">
     </div>
     <div class="form-row"><div><label>Notes (optional)</label><textarea id="assignNotes" rows="2"></textarea></div></div>
     <div class="modal-footer">
@@ -1711,7 +1707,6 @@ function renderPage(page) {
   else if (page === 'readings') renderReadings();
   else if (page === 'timeline') renderTimeline();
   else if (page === 'notes') renderNotes();
-  else if (page === 'discussion') renderDiscussion();
   else if (page === 'dissertation') renderDissertation();
   else if (page === 'export') renderExport();
 }
@@ -2181,16 +2176,28 @@ function renderAssignments() {
     return a.weight ? a.weight + '%' : '—';
   }
 
+  function responseDots(a) {
+    const total = a.responses_required;
+    const done = a.responses_done || 0;
+    let dots = '';
+    for (let i = 1; i <= total; i++) {
+      dots += `<div class="check-circle ${i <= done ? 'done' : ''}" style="width:16px;height:16px;display:inline-flex" onclick="toggleResponseDot('${a.id}', ${i})" title="Response ${i}"></div>`;
+    }
+    return `<div style="display:flex;gap:3px">${dots}</div>`;
+  }
+
   function assignRow(a) {
     const c = courseById(a.course_id);
     const hasNotes = !!(a.notes && a.notes.trim()) || notes.some(n => n.assignment_id === a.id);
     const dueTodayCls = (!a.completed && isDueToday(a.due_date)) ? 'due-today' : '';
+    const hasResponses = a.responses_required > 0;
     return `<tr class="${dueTodayCls}" data-id="${a.id}">
       <td>${a.completed ? '' : '<i class="ti ti-grip-vertical drag-handle"></i>'}</td>
-      <td><div class="check-circle ${a.completed ? 'done' : ''}" onclick="toggleAssign('${a.id}')"></div></td>
+      <td>${hasResponses ? responseDots(a) : `<div class="check-circle ${a.completed ? 'done' : ''}" onclick="toggleAssign('${a.id}')"></div>`}</td>
       <td>
         <span class="dl-name" style="cursor:pointer;${a.completed ? 'opacity:.55;text-decoration:line-through' : ''}" onclick="openAssignmentNotes('${a.id}')">${a.name}</span>
         ${a.optional ? `<span class="tag tag-gray" style="font-size:9px;margin-left:5px;vertical-align:middle">OPTIONAL</span>` : ''}
+        ${hasResponses ? `<span class="tag tag-gray" style="font-size:9px;margin-left:5px;vertical-align:middle">${a.responses_done||0}/${a.responses_required} responses</span>` : ''}
         ${hasNotes ? `<i class="ti ti-notes" title="Has notes" style="font-size:12px;color:var(--text3);margin-left:5px;cursor:pointer" onclick="openAssignmentNotes('${a.id}')"></i>` : ''}
       </td>
       <td class="hide-mobile">${courseTag(c)}</td>
@@ -2234,6 +2241,21 @@ async function toggleAssign(id) {
   if (currentPage === 'today') renderToday();
 }
 
+async function toggleResponseDot(id, clickedIndex) {
+  const a = assignments.find(x => x.id === id);
+  if (!a) return;
+  const current = a.responses_done || 0;
+  // Star-rating style: clicking a filled dot un-checks it and everything after;
+  // clicking beyond current fills up through that dot
+  const newDone = clickedIndex <= current ? clickedIndex - 1 : clickedIndex;
+  a.responses_done = newDone;
+  a.completed = newDone >= a.responses_required;
+  await sbPatch('assignments', id, { responses_done: newDone, completed: a.completed });
+  renderAssignments();
+  if (currentPage === 'dashboard') renderDashboard();
+  if (currentPage === 'today') renderToday();
+}
+
 function toggleAssignPassFailUI() {
   const isPF = document.getElementById('assignPassFail').checked;
   document.getElementById('assignWeight').disabled = isPF;
@@ -2250,6 +2272,7 @@ function openAddAssignment() {
   document.getElementById('assignNotes').value = '';
   document.getElementById('assignPassFail').checked = false;
   document.getElementById('assignOptional').checked = false;
+  document.getElementById('assignResponsesRequired').value = '';
   toggleAssignPassFailUI();
   document.getElementById('assignModalTitle').textContent = 'Add Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'none';
@@ -2269,6 +2292,7 @@ function editAssignment(id) {
   document.getElementById('assignNotes').value = a.notes || '';
   document.getElementById('assignPassFail').checked = !!a.pass_fail;
   document.getElementById('assignOptional').checked = !!a.optional;
+  document.getElementById('assignResponsesRequired').value = a.responses_required ?? '';
   toggleAssignPassFailUI();
   document.getElementById('assignModalTitle').textContent = 'Edit Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'inline-flex';
@@ -2281,6 +2305,7 @@ function editAssignment(id) {
 async function saveAssignment() {
   const id = document.getElementById('editAssignId').value;
   const isPF = document.getElementById('assignPassFail').checked;
+  const responsesRequired = parseInt(document.getElementById('assignResponsesRequired').value) || null;
   const data = {
     name: document.getElementById('assignName').value.trim(),
     course_id: document.getElementById('assignCourse').value,
@@ -2290,11 +2315,12 @@ async function saveAssignment() {
     points: isPF ? null : (parseFloat(document.getElementById('assignPoints').value) || null),
     pass_fail: isPF,
     optional: document.getElementById('assignOptional').checked,
+    responses_required: responsesRequired,
     notes: document.getElementById('assignNotes').value.trim()
   };
   if (!data.name) { showToast('Assignment name required'); return; }
   if (id) { await sbPatch('assignments', id, data); Object.assign(assignments.find(a => a.id === id), data); }
-  else { const r = await sb('POST', 'assignments', { ...data, completed: false }); assignments.push(r[0]); }
+  else { const r = await sb('POST', 'assignments', { ...data, completed: false, responses_done: 0 }); assignments.push(r[0]); }
   closeModal('modalAssignment');
   renderAll();
   showToast('Saved!');
