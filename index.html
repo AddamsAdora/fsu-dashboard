@@ -1800,6 +1800,14 @@ function filterBtnClass(color) {
 function slugify(s) {
   return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
+function linkIconFor(url) {
+  if (!url) return { icon: 'ti-external-link', label: 'Open link' };
+  const u = url.toLowerCase();
+  if (u.includes('drive.google.com') || u.includes('docs.google.com')) return { icon: 'ti-brand-google-drive', label: 'Open in Google Drive' };
+  if (u.includes('dropbox.com')) return { icon: 'ti-brand-dropbox', label: 'Open in Dropbox' };
+  if (u.includes('doi.org')) return { icon: 'ti-link', label: 'Open DOI link' };
+  return { icon: 'ti-external-link', label: 'Open link' };
+}
 function fmtDate(d) {
   if (!d) return '—';
   const dt = new Date(d + 'T12:00:00');
@@ -2449,7 +2457,7 @@ function renderReadings() {
           <i class="ti ti-grip-vertical drag-handle" style="margin-top:4px"></i>
           <div class="check-circle ${rCheckClass}" onclick="toggleReading('${r.id}')" style="margin-top:2px"></div>
           <div class="reading-text">
-            <div class="reading-title">${r.title}${r.url ? ` <a href="${r.url}" target="_blank" style="font-size:11px;color:var(--garnet);margin-left:6px"><i class="ti ti-external-link"></i></a>` : ''}</div>
+            <div class="reading-title">${r.title}${r.url ? (() => { const li = linkIconFor(r.url); return ` <a href="${r.url}" target="_blank" title="${li.label}" style="font-size:11px;color:var(--garnet);margin-left:6px"><i class="ti ${li.icon}"></i></a>`; })() : ''}</div>
             ${r.citation ? `<div class="reading-citation">${r.citation}</div>` : ''}
           </div>
           <button class="btn btn-secondary btn-sm btn-icon" onclick="editReading('${r.id}')"><i class="ti ti-pencil"></i></button>
