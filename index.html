@@ -388,19 +388,6 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .focus-content strong { font-size: 14px; font-weight: 600; color: #ffffff; display: block; }
 .focus-content span { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
-/* ── DISCUSSION ── */
-.disc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
-.disc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; backdrop-filter: blur(8px); }
-.disc-week-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.disc-week-label { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); text-transform: uppercase; }
-.disc-deadline { font-size: 11px; color: var(--text3); }
-.disc-dots { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-.disc-dot-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 11px; font-weight: 700; color: var(--text3); display: flex; align-items: center; justify-content: center; transition: all .12s; }
-.disc-dot-btn.filled { background: var(--pink); border-color: var(--pink); color: #fff; }
-.disc-status { font-size: 12px; font-weight: 600; }
-.disc-status.good { color: var(--teal); }
-.disc-status.warn { color: var(--gold); }
-.disc-status.miss { color: var(--pink); }
 
 /* ── NOTES ── */
 .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
@@ -569,7 +556,6 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 [data-theme="light"] .card,
 [data-theme="light"] .focus-item,
 [data-theme="light"] .week-card,
-[data-theme="light"] .disc-card,
 [data-theme="light"] .note-card,
 [data-theme="light"] .milestone-item,
 [data-theme="light"] .conn-card,
@@ -673,7 +659,6 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <a href="#" onclick="nav('readings')" id="nav-readings"><i class="ti ti-books"></i> Readings</a>
     <a href="#" onclick="nav('timeline')" id="nav-timeline"><i class="ti ti-calendar"></i> Timeline</a>
     <a href="#" onclick="nav('notes')" id="nav-notes"><i class="ti ti-notes"></i> Notes</a>
-    <a href="#" onclick="nav('discussion')" id="nav-discussion"><i class="ti ti-message-circle"></i> Disc.</a>
     <a href="#" onclick="nav('apa')" id="nav-apa"><i class="ti ti-quote"></i> APA</a>
     <a href="#" onclick="nav('dissertation')" id="nav-dissertation"><i class="ti ti-certificate"></i> Diss.</a>
     <a href="#" onclick="nav('export')" id="nav-export"><i class="ti ti-file-export"></i> Export</a>
@@ -697,7 +682,6 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <a href="#" onclick="nav('readings');closeDrawer()"><i class="ti ti-books"></i> Readings</a>
     <a href="#" onclick="nav('timeline');closeDrawer()"><i class="ti ti-calendar"></i> Timeline</a>
     <a href="#" onclick="nav('notes');closeDrawer()"><i class="ti ti-notes"></i> Notes</a>
-    <a href="#" onclick="nav('discussion');closeDrawer()"><i class="ti ti-message-circle"></i> Discussion Tracker</a>
     <a href="#" onclick="nav('apa');closeDrawer()"><i class="ti ti-quote"></i> APA Builder</a>
     <a href="#" onclick="nav('dissertation');closeDrawer()"><i class="ti ti-certificate"></i> Dissertation</a>
     <a href="#" onclick="nav('export');closeDrawer()"><i class="ti ti-file-export"></i> Export</a>
@@ -907,12 +891,6 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
       <input type="text" id="noteSearch" placeholder="Search notes…" oninput="renderNotes()" style="max-width:320px">
     </div>
     <div class="notes-grid" id="notesGrid"></div>
-  </div>
-
-  <!-- DISCUSSION TRACKER PAGE -->
-  <div class="page" id="page-discussion">
-    <div class="page-header"><h1>Discussion Tracker</h1><p>Weekly post counts — lowest week is automatically dropped once 9 graded weeks are logged</p></div>
-    <div id="discGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px"></div>
   </div>
 
   <!-- APA BUILDER PAGE -->
@@ -1445,7 +1423,6 @@ function renderSemesterSwitcher() {
     `<option value="${s.id}" ${s.id === activeSem.id ? 'selected' : ''}>${s.name}${s.is_current ? ' (current)' : ''}</option>`
   ).join('');
 }
-let discData = {}; // { weekKey: { posts: n, tokenUsed: bool } }
 let currentPage = 'today';
 let currentCourseFilter = 'all';
 let currentReadFilter = 'all';
@@ -1630,8 +1607,6 @@ async function loadAll() {
     sbGet('readings'), sbGet('notes'), sbGet('milestones','order=sort_order.asc'),
     sbGet('connections','order=sort_order.asc')
   ]);
-  const raw = localStorage.getItem('discData');
-  discData = raw ? JSON.parse(raw) : {};
 }
 
 async function seedData() {
@@ -1716,7 +1691,6 @@ function renderPage(page) {
   else if (page === 'readings') renderReadings();
   else if (page === 'timeline') renderTimeline();
   else if (page === 'notes') renderNotes();
-  else if (page === 'discussion') renderDiscussion();
   else if (page === 'dissertation') renderDissertation();
   else if (page === 'export') renderExport();
 }
@@ -2680,64 +2654,6 @@ function renderTimeline() {
       </div>
     </div>`;
   }).join('');
-}
-
-// ── DISCUSSION ───────────────────────────────────
-function renderDiscussion() {
-  const curSem = getViewingSemester();
-  const start = curSem.start_date ? new Date(curSem.start_date + 'T12:00:00') : new Date('2026-05-12');
-  const today = new Date();
-
-  const weeks = [];
-  let d = new Date(start);
-  for (let i = 1; i <= 12; i++) {
-    const wEnd = new Date(d); wEnd.setDate(wEnd.getDate() + 6);
-    weeks.push({ num: i, start: new Date(d), end: wEnd });
-    d.setDate(d.getDate() + 7);
-  }
-
-  // Determine 9 graded weeks (weeks with a Sunday deadline — simplified: all 12, lowest dropped)
-  const gradedCount = 9;
-  const tokenUsed = discData['token_used'] || false;
-
-  document.getElementById('discGrid').innerHTML = weeks.map(w => {
-    const key = `week_${w.num}`;
-    const wData = discData[key] || { posts: 0 };
-    const posts = wData.posts || 0;
-    const sunDate = new Date(w.end);
-    const isDropped = w.num === (discData['dropped_week'] || 0);
-    const isPast = today > w.end;
-    const status = posts >= 4 ? 'good' : (posts > 0 ? 'warn' : (isPast ? 'miss' : 'warn'));
-    const statusText = posts >= 4 ? '✓ Complete' : (isPast && posts < 4 ? `${posts}/4 — Missed` : `${posts}/4 posts`);
-
-    return `<div class="disc-card">
-      <div class="disc-week-header">
-        <div class="disc-week-label">Week ${w.num}</div>
-        <div class="disc-deadline">${isDropped ? '🗑 Dropped' : 'Due ' + sunDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
-      </div>
-      <div class="disc-dots">
-        ${[1,2,3,4].map(n => `<button class="disc-dot-btn ${posts >= n ? 'filled' : ''}" onclick="setDiscPosts(${w.num}, ${n})">${n}</button>`).join('')}
-        <button class="disc-dot-btn ${posts >= 5 ? 'filled' : ''}" onclick="setDiscPosts(${w.num}, 5)" style="font-size:9px">5+</button>
-      </div>
-      <div class="disc-status ${status}">${statusText}</div>
-      ${isDropped ? '<div class="disc-dropped">Lowest week — automatically dropped</div>' : ''}
-    </div>`;
-  }).join('');
-}
-
-function setDiscPosts(week, n) {
-  const key = `week_${week}`;
-  if (!discData[key]) discData[key] = {};
-  discData[key].posts = n;
-  // Auto-mark lowest dropped week
-  const gradedWeeks = Object.entries(discData).filter(([k]) => k.startsWith('week_'));
-  if (gradedWeeks.length >= 9) {
-    const sorted = gradedWeeks.map(([k,v]) => ({ num: parseInt(k.replace('week_','')), posts: v.posts || 0 }))
-      .sort((a,b) => a.posts - b.posts);
-    discData['dropped_week'] = sorted[0].num;
-  }
-  localStorage.setItem('discData', JSON.stringify(discData));
-  renderDiscussion();
 }
 
 // ── GRADES ───────────────────────────────────────
