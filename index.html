@@ -407,7 +407,8 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .milestone-item:hover { border-color: var(--border2); }
 .milestone-item.done { opacity: .6; }
 .milestone-icon { width: 38px; height: 38px; border-radius: 9px; background: var(--surface2); color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
-.milestone-item.done .milestone-icon { background: rgba(0,201,167,0.15); color: var(--teal); }
+.milestone-item.done .milestone-icon { background: rgba(34,197,94,0.18); color: #4ade80; }
+[data-theme="light"] .milestone-item.done .milestone-icon { background: rgba(34,197,94,0.16); color: #15803d; }
 .milestone-name { font-size: 14px; font-weight: 600; color: var(--text); }
 .milestone-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
 .milestone-date { font-size: 11px; color: var(--text3); margin-top: 4px; }
@@ -586,6 +587,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 [data-theme="light"] .tag-gold { background: rgba(184,135,46,0.2); color: #6b4e12; border-color: rgba(184,135,46,0.48); }
 [data-theme="light"] .tag-blue { background: rgba(66,85,99,0.14); color: #2e3943; border-color: rgba(66,85,99,0.4); }
 [data-theme="light"] .tag-gray { background: rgba(87,41,50,0.07); color: rgba(36,16,22,0.6); border-color: rgba(87,41,50,0.14); }
+[data-theme="light"] .tag-green { background: rgba(34,197,94,0.14); color: #15803d; border-color: rgba(34,197,94,0.35); }
 [data-theme="light"] .float-note,
 [data-theme="light"] #floatNoteBtn {
   background: linear-gradient(135deg, #782F40, #CEB888) !important;
@@ -3562,6 +3564,21 @@ async function confirmMilestoneImport() {
 }
 
 // ── EXPORT ───────────────────────────────────────
+function formatGradeDisplay(a) {
+  if (a.pass_fail) {
+    if (a.grade === 1) return 'Complete';
+    if (a.grade === 0) return 'Incomplete';
+    return '—';
+  }
+  if (a.points) {
+    return (a.grade || a.grade === 0) ? `${a.grade}/${a.points}` : '—';
+  }
+  if (a.weight) {
+    return (a.grade || a.grade === 0) ? `${a.grade}%` : '—';
+  }
+  return '—';
+}
+
 function renderExport() {
   const curSem = getViewingSemester();
   document.getElementById('exportTitle').textContent = curSem.name || 'Semester Summary';
@@ -3591,11 +3608,12 @@ function renderExport() {
     return `<div style="margin-bottom:20px">
       <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:#782F40">${c.code} — ${c.name}</div>
       <table class="tbl">
-        <thead><tr><th>Assignment</th><th>Due</th><th>Status</th></tr></thead>
+        <thead><tr><th>Assignment</th><th>Due</th><th>Grade</th><th>Status</th></tr></thead>
         <tbody>
           ${cA.map(a => `<tr>
             <td>${a.name}</td>
             <td>${a.due_date ? new Date(a.due_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'}</td>
+            <td>${formatGradeDisplay(a)}</td>
             <td>${a.completed ? '<span class="tag tag-green"><i class="ti ti-check"></i> Done</span>' : '<span class="tag tag-gray">Pending</span>'}</td>
           </tr>`).join('')}
         </tbody>
@@ -3703,7 +3721,12 @@ function downloadExportPDF() {
       doc.setTextColor(...DARK);
       doc.setFont('helvetica', a.completed ? 'italic' : 'normal'); doc.setFontSize(9);
       const label = (a.completed ? '✓  ' : '   ') + a.name;
-      doc.text(label, margin + 5, y + 5.2, { maxWidth: contentW - 28 });
+      doc.text(label, margin + 5, y + 5.2, { maxWidth: contentW - 46 });
+      const gradeStr = formatGradeDisplay(a);
+      if (gradeStr !== '—') {
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(...col); doc.setFontSize(8);
+        doc.text(gradeStr, pageW - margin - 22, y + 5.2, { align: 'right' });
+      }
       if (a.due_date) {
         doc.setFont('helvetica', 'normal'); doc.setTextColor(...GRAY); doc.setFontSize(8);
         const ds = new Date(a.due_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
