@@ -2477,7 +2477,7 @@ function renderReadings() {
           <i class="ti ti-grip-vertical drag-handle" style="margin-top:4px"></i>
           <div class="check-circle ${rCheckClass}" onclick="toggleReading('${r.id}')" style="margin-top:2px"></div>
           <div class="reading-text">
-            <div class="reading-title">${r.title}${r.url ? (() => { const li = linkIconFor(r.url); return ` <a href="${r.url}" target="_blank" title="${li.label}" style="font-size:15px;color:var(--garnet);margin-left:6px;vertical-align:middle"><i class="ti ${li.icon}"></i></a>`; })() : ''}</div>
+            <div class="reading-title">${r.title}${r.url ? (() => { const li = linkIconFor(r.url); return ` <a href="${r.url}" target="_blank" title="${li.label}" style="font-size:15px;color:var(--pink);margin-left:6px;vertical-align:middle"><i class="ti ${li.icon}"></i></a>`; })() : ''}</div>
             ${r.citation ? `<div class="reading-citation">${r.citation}</div>` : ''}
           </div>
           <button class="btn btn-secondary btn-sm btn-icon" onclick="editReading('${r.id}')"><i class="ti ti-pencil"></i></button>
