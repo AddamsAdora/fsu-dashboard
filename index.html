@@ -1711,38 +1711,7 @@ function enableDragReorder(containerId, itemSelector, table, dataArrayName, afte
   if (!container) return;
   let dragEl = null;
 
-  container.querySelectorAll(itemSelector).forEach(el => {
-    const handle = el.querySelector('.drag-handle');
-    if (!handle) return;
-    handle.setAttribute('draggable', 'true');
-    handle.addEventListener('dragstart', (e) => {
-      dragEl = el;
-      el.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    handle.addEventListener('dragend', () => {
-      el.classList.remove('dragging');
-      dragEl = null;
-    });
-  });
-
-  container.ondragover = (e) => {
-    e.preventDefault();
-    if (!dragEl) return;
-    const siblings = [...container.querySelectorAll(`${itemSelector}:not(.dragging)`)];
-    const after = siblings.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = e.clientY - box.top - box.height / 2;
-      if (offset < 0 && offset > closest.offset) return { offset, element: child };
-      return closest;
-    }, { offset: -Infinity, element: null }).element;
-    if (after == null) container.appendChild(dragEl);
-    else container.insertBefore(dragEl, after);
-  };
-
-  container.ondrop = async (e) => {
-    e.preventDefault();
-    if (!dragEl) return;
+  async function finalize() {
     const items = [...container.querySelectorAll(itemSelector)];
     const dataArr = getReorderableArray(dataArrayName);
     for (let i = 0; i < items.length; i++) {
@@ -1754,7 +1723,42 @@ function enableDragReorder(containerId, itemSelector, table, dataArrayName, afte
       }
     }
     if (afterReorder) afterReorder();
-  };
+  }
+
+  container.querySelectorAll(itemSelector).forEach(el => {
+    const handle = el.querySelector('.drag-handle');
+    if (!handle) return;
+    handle.style.touchAction = 'none';
+
+    handle.addEventListener('pointerdown', (e) => {
+      dragEl = el;
+      el.classList.add('dragging');
+      try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+
+    handle.addEventListener('pointermove', (e) => {
+      if (!dragEl) return;
+      const siblings = [...container.querySelectorAll(`${itemSelector}:not(.dragging)`)];
+      const after = siblings.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = e.clientY - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) return { offset, element: child };
+        return closest;
+      }, { offset: -Infinity, element: null }).element;
+      if (after == null) container.appendChild(dragEl);
+      else container.insertBefore(dragEl, after);
+    });
+
+    const endDrag = async () => {
+      if (!dragEl) return;
+      dragEl.classList.remove('dragging');
+      dragEl = null;
+      await finalize();
+    };
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+  });
 }
 function getReorderableArray(name) {
   if (name === 'assignments') return assignments;
@@ -4166,7 +4170,7 @@ function parseAssignBlock(lines, courseId) {
   const full = lines.join(' ');
   // name = first line that isn't itself a "Due ..." line
   let name = lines.find(l => !/^due\b/i.test(l)) || lines[0] || '';
-  name = name.replace(/^[\s\-•·\*\d]+\.?\s*/, '').trim();
+  name = name.replace(/^([-•·*]\s+|\d+[.)]\s+)/, '').trim();
 
   let due_date = null;
   const dateMatch = full.match(/due\s+([A-Za-z]{3,9})\s+(\d{1,2})/i);
@@ -4216,17 +4220,17 @@ function renderImportAssignPreview() {
     <div style="padding:12px 14px;border-bottom:1px solid var(--border);${i===importAssignParsed.length-1?'border-bottom:none':''}">
       <div style="display:flex;align-items:flex-start;gap:10px">
         <input type="checkbox" ${a._checked ? 'checked' : ''} onchange="importAssignParsed[${i}]._checked=this.checked" style="margin-top:4px">
-        <div style="flex:1">
+        <div style="flex:1;min-width:0">
           <input type="text" value="${escHtml(a.name)}" style="font-size:13px;font-weight:600;border:none;background:transparent;padding:0;width:100%;color:var(--text)"
             oninput="importAssignParsed[${i}].name=this.value">
-          <div style="display:flex;gap:10px;align-items:center;margin-top:4px;flex-wrap:wrap">
-            <input type="date" value="${a.due_date || ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:2px 4px"
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+            <input type="date" value="${a.due_date || ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:4px 6px;width:100%"
               onchange="importAssignParsed[${i}].due_date=this.value">
-            <input type="time" value="${a.due_time || ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:2px 4px"
+            <input type="time" value="${a.due_time || ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:4px 6px;width:100%"
               onchange="importAssignParsed[${i}].due_time=this.value">
-            <input type="number" placeholder="pts" value="${a.points ?? ''}" style="width:60px;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:2px 4px"
+            <input type="number" placeholder="pts" value="${a.points ?? ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:4px 6px;width:100%"
               onchange="importAssignParsed[${i}].points=parseFloat(this.value)||null">
-            <span class="tag tag-gray" style="font-size:10px">${escHtml(a.type)}</span>
+            <span class="tag tag-gray" style="font-size:10px;display:flex;align-items:center;justify-content:center">${escHtml(a.type)}</span>
           </div>
         </div>
       </div>
