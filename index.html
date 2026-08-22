@@ -4221,8 +4221,9 @@ function renderImportAssignPreview() {
       <div style="display:flex;align-items:flex-start;gap:10px">
         <input type="checkbox" ${a._checked ? 'checked' : ''} onchange="importAssignParsed[${i}]._checked=this.checked" style="margin-top:4px">
         <div style="flex:1;min-width:0">
-          <input type="text" value="${escHtml(a.name)}" style="font-size:13px;font-weight:600;border:none;background:transparent;padding:0;width:100%;color:var(--text)"
-            oninput="importAssignParsed[${i}].name=this.value">
+          <textarea rows="1" style="font-size:13px;font-weight:600;border:none;background:transparent;padding:0;width:100%;color:var(--text);resize:vertical;overflow:hidden;word-break:break-word;font-family:inherit;line-height:1.4"
+            oninput="importAssignParsed[${i}].name=this.value; this.style.height='auto'; this.style.height=this.scrollHeight+'px';"
+            onfocus="this.style.height='auto'; this.style.height=this.scrollHeight+'px';">${escHtml(a.name)}</textarea>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
             <input type="date" value="${a.due_date || ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:4px 6px;width:100%"
               onchange="importAssignParsed[${i}].due_date=this.value">
@@ -4236,6 +4237,7 @@ function renderImportAssignPreview() {
       </div>
     </div>
   `).join('') || '<div style="text-align:center;padding:20px;color:var(--text3)">Nothing to review</div>';
+  list.querySelectorAll('textarea').forEach(t => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; });
 }
 
 async function confirmAssignImport() {
