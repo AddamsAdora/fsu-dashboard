@@ -2314,7 +2314,9 @@ function openAddAssignment() {
   document.getElementById('assignModalTitle').textContent = 'Add Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'none';
   const sel = document.getElementById('assignCourse');
-  sel.innerHTML = courses.map(c => `<option value="${c.id}">${c.code}</option>`).join('');
+  const curSem = getViewingSemester();
+  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+  sel.innerHTML = semCourses.map(c => `<option value="${c.id}">${c.code}</option>`).join('');
   openModal('modalAssignment');
 }
 
@@ -2334,7 +2336,9 @@ function editAssignment(id) {
   document.getElementById('assignModalTitle').textContent = 'Edit Assignment';
   document.getElementById('deleteAssignBtn').style.display = 'inline-flex';
   const sel = document.getElementById('assignCourse');
-  sel.innerHTML = courses.map(c => `<option value="${c.id}" ${c.id === a.course_id ? 'selected' : ''}>${c.code}</option>`).join('');
+  const curSem = getViewingSemester();
+  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+  sel.innerHTML = semCourses.map(c => `<option value="${c.id}" ${c.id === a.course_id ? 'selected' : ''}>${c.code}</option>`).join('');
   document.getElementById('assignType').value = a.type || 'Assignment';
   openModal('modalAssignment');
 }
@@ -2560,7 +2564,11 @@ function openAddReading() {
   document.getElementById('readUrl').value = '';
   document.getElementById('readModalTitle').textContent = 'Add Reading';
   document.getElementById('deleteReadBtn').style.display = 'none';
-  document.getElementById('readCourse').innerHTML = courses.map(c => `<option value="${c.id}">${c.code}</option>`).join('');
+  {
+    const curSem = getViewingSemester();
+    const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+    document.getElementById('readCourse').innerHTML = semCourses.map(c => `<option value="${c.id}">${c.code}</option>`).join('');
+  }
   openModal('modalReading');
 }
 
@@ -2574,7 +2582,11 @@ function editReading(id) {
   document.getElementById('readUrl').value = r.url || '';
   document.getElementById('readModalTitle').textContent = 'Edit Reading';
   document.getElementById('deleteReadBtn').style.display = 'inline-flex';
-  document.getElementById('readCourse').innerHTML = courses.map(c => `<option value="${c.id}" ${c.id === r.course_id ? 'selected' : ''}>${c.code}</option>`).join('');
+  {
+    const curSem = getViewingSemester();
+    const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+    document.getElementById('readCourse').innerHTML = semCourses.map(c => `<option value="${c.id}" ${c.id === r.course_id ? 'selected' : ''}>${c.code}</option>`).join('');
+  }
   openModal('modalReading');
 }
 
@@ -3891,7 +3903,9 @@ let importParsed = [];
 function openImportReadings() {
   // Populate course dropdown
   const sel = document.getElementById('importCourse');
-  sel.innerHTML = courses.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
+  const curSem = getViewingSemester();
+  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+  sel.innerHTML = semCourses.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
   // Reset to step 1
   document.getElementById('importText').value = '';
   document.getElementById('importWeekLabel').value = '';
@@ -4065,7 +4079,9 @@ let importAssignParsed = [];
 
 function openImportAssign() {
   const sel = document.getElementById('importAssignCourse');
-  sel.innerHTML = courses.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
+  const curSem = getViewingSemester();
+  const semCourses = curSem.id ? courses.filter(c => c.semester_id === curSem.id) : courses;
+  sel.innerHTML = semCourses.map(c => `<option value="${c.id}">${c.code} — ${c.name}</option>`).join('');
   document.getElementById('importAssignText').value = '';
   document.getElementById('importAssignStep1').style.display = 'block';
   document.getElementById('importAssignStep2').style.display = 'none';
