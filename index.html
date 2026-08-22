@@ -335,6 +335,7 @@ option { background: #180b0f; }
 .form-row { display: grid; gap: 12px; margin-bottom: 12px; }
 .form-row.cols2 { grid-template-columns: 1fr 1fr; }
 .form-row.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-row.cols4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
 label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
 
 /* ── MODAL ── */
@@ -606,6 +607,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
   .export-grid { grid-template-columns: 1fr 1fr; }
   .form-row.cols2 { grid-template-columns: 1fr; }
   .form-row.cols3 { grid-template-columns: 1fr; }
+  .form-row.cols4 { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 480px) {
   .main { padding: 16px 14px 60px; }
@@ -1053,8 +1055,9 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
         </select>
       </div>
     </div>
-    <div class="form-row cols3">
+    <div class="form-row cols4">
       <div><label>Due Date</label><input type="date" id="assignDue"></div>
+      <div><label>Due Time (optional)</label><input type="time" id="assignDueTime"></div>
       <div><label>Weight (%)</label><input type="number" id="assignWeight" placeholder="20"></div>
       <div><label>Points</label><input type="number" id="assignPoints" placeholder="100"></div>
     </div>
@@ -1790,6 +1793,17 @@ function fmtDate(d) {
   const dt = new Date(d + 'T12:00:00');
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+function fmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${period}`;
+}
+function fmtDateTime(d, t) {
+  if (!d) return '—';
+  return fmtDate(d) + (t ? `, ${fmtTime(t)}` : '');
+}
 function daysUntil(d) {
   if (!d) return null;
   return Math.ceil((new Date(d + 'T12:00:00') - new Date()) / 86400000);
@@ -1880,7 +1894,7 @@ function renderToday() {
     const isSoon = days >= 0 && days <= 2;
     const iconType = isOverdue ? 'red' : isSoon ? 'amber' : 'blue';
     const icon = isOverdue ? 'ti-alert-triangle' : isSoon ? 'ti-clock' : 'ti-calendar';
-    const dueStr = isOverdue ? `${Math.abs(days)}d overdue` : days === 0 ? 'Due today' : days === 1 ? 'Due tomorrow' : `Due ${fmtDate(a.due_date)}`;
+    const dueStr = isOverdue ? `${Math.abs(days)}d overdue` : days === 0 ? 'Due today' : days === 1 ? 'Due tomorrow' : `Due ${fmtDateTime(a.due_date, a.due_time)}`;
     const dueTodayCls = days === 0 ? ' due-today' : '';
     nextHtml += `<div class="focus-item${dueTodayCls}" style="cursor:pointer" onclick="nav('assignments')">
       <div class="focus-icon ${iconType}"><i class="ti ${icon}"></i></div>
@@ -2106,7 +2120,7 @@ function renderDashboard() {
     const dot = urgencyDot(a.due_date);
     const dotColor = c.color === 'gold' ? '#CEB888' : c.color === 'blue' ? '#5f7d89' : '#782F40';
     const dueTodayCls = isDueToday(a.due_date) ? ' due-today' : '';
-    return `<div class="deadline-item${dueTodayCls}"><div class="dl-dot"></div><span class="dl-name">${a.name}</span>${courseTag(c)}<span class="dl-meta">${fmtDate(a.due_date)}</span></div>`.replace('class="dl-dot"', `class="dl-dot" style="background:${dotColor}"`);
+    return `<div class="deadline-item${dueTodayCls}"><div class="dl-dot"></div><span class="dl-name">${a.name}</span>${courseTag(c)}<span class="dl-meta">${fmtDateTime(a.due_date, a.due_time)}</span></div>`.replace('class="dl-dot"', `class="dl-dot" style="background:${dotColor}"`);
   }).join('') || '<p style="color:var(--text3);font-size:13px;padding:8px 0">No upcoming deadlines</p>';
   document.getElementById('upcomingDeadlines').innerHTML = dlHtml;
 
@@ -2201,7 +2215,7 @@ function renderAssignments() {
         ${hasNotes ? `<i class="ti ti-notes" title="Has notes" style="font-size:12px;color:var(--text3);margin-left:5px;cursor:pointer" onclick="openAssignmentNotes('${a.id}')"></i>` : ''}
       </td>
       <td class="hide-mobile">${courseTag(c)}</td>
-      <td class="hide-mobile" style="${a.completed ? 'opacity:.55' : ''}">${fmtDate(a.due_date)}</td>
+      <td class="hide-mobile" style="${a.completed ? 'opacity:.55' : ''}">${fmtDateTime(a.due_date, a.due_time)}</td>
       <td class="hide-mobile" style="${a.completed ? 'opacity:.55' : ''}">${unitCell(a)}</td>
       <td><button class="btn btn-secondary btn-sm btn-icon" onclick="editAssignment('${a.id}')"><i class="ti ti-pencil"></i></button></td>
     </tr>`;
@@ -2304,6 +2318,7 @@ function openAddAssignment() {
   document.getElementById('editAssignId').value = '';
   document.getElementById('assignName').value = '';
   document.getElementById('assignDue').value = '';
+  document.getElementById('assignDueTime').value = '';
   document.getElementById('assignWeight').value = '';
   document.getElementById('assignPoints').value = '';
   document.getElementById('assignNotes').value = '';
@@ -2326,6 +2341,7 @@ function editAssignment(id) {
   document.getElementById('editAssignId').value = id;
   document.getElementById('assignName').value = a.name;
   document.getElementById('assignDue').value = a.due_date || '';
+  document.getElementById('assignDueTime').value = a.due_time || '';
   document.getElementById('assignWeight').value = a.weight || '';
   document.getElementById('assignPoints').value = a.points || '';
   document.getElementById('assignNotes').value = a.notes || '';
@@ -2352,6 +2368,7 @@ async function saveAssignment() {
     course_id: document.getElementById('assignCourse').value,
     type: document.getElementById('assignType').value,
     due_date: document.getElementById('assignDue').value || null,
+    due_time: document.getElementById('assignDueTime').value || null,
     weight: isPF ? null : (parseFloat(document.getElementById('assignWeight').value) || null),
     points: isPF ? null : (parseFloat(document.getElementById('assignPoints').value) || null),
     pass_fail: isPF,
@@ -2663,7 +2680,7 @@ function renderTimeline() {
         ${w.deadlines.length ? w.deadlines.map(a => {
           const c = courseById(a.course_id);
           const dueTodayCls = isDueToday(a.due_date) ? ' due-today' : '';
-          return `<div class="week-dl-item${dueTodayCls}"><i class="ti ti-calendar-event"></i><span>${a.name} ${courseTag(c)} <em style="color:var(--text3);font-size:11px">${fmtDate(a.due_date)}</em></span></div>`;
+          return `<div class="week-dl-item${dueTodayCls}"><i class="ti ti-calendar-event"></i><span>${a.name} ${courseTag(c)} <em style="color:var(--text3);font-size:11px">${fmtDateTime(a.due_date, a.due_time)}</em></span></div>`;
         }).join('') : '<span style="font-size:12px;color:var(--text3)">No deadlines this week</span>'}
       </div>
     </div>`;
@@ -2750,7 +2767,7 @@ function renderGrades() {
       }
       return `<tr class="${isDueToday(a.due_date) ? 'due-today' : ''}">
         <td>${a.name}</td>
-        <td class="hide-mobile">${fmtDate(a.due_date)}</td>
+        <td class="hide-mobile">${fmtDateTime(a.due_date, a.due_time)}</td>
         <td>${colLabel}</td>
         <td>${inputCell}</td>
       </tr>`;
@@ -2953,7 +2970,7 @@ function openAssignmentNotes(assignmentId) {
   if (!a) return;
   document.getElementById('assignNotesModalTitle').textContent = a.name;
   const c = courseById(a.course_id);
-  document.getElementById('assignNotesModalSub').textContent = [c ? c.code : null, fmtDate(a.due_date)].filter(Boolean).join(' · ');
+  document.getElementById('assignNotesModalSub').textContent = [c ? c.code : null, fmtDateTime(a.due_date, a.due_time)].filter(Boolean).join(' · ');
   document.getElementById('assignNotesAddBtn').setAttribute('onclick', `openAddNote('${assignmentId}')`);
   document.getElementById('assignNotesEditBtn').setAttribute('onclick', `editAssignment('${assignmentId}')`);
   renderAssignmentNotesList(assignmentId);
@@ -3624,7 +3641,7 @@ function renderExport() {
         <tbody>
           ${cA.map(a => `<tr>
             <td>${a.name}</td>
-            <td>${a.due_date ? new Date(a.due_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'}</td>
+            <td>${fmtDateTime(a.due_date, a.due_time)}</td>
             <td>${formatGradeDisplay(a)}</td>
             <td>${a.completed ? '<span class="tag tag-green"><i class="ti ti-check"></i> Done</span>' : '<span class="tag tag-gray">Pending</span>'}</td>
           </tr>`).join('')}
@@ -3741,7 +3758,7 @@ function downloadExportPDF() {
       }
       if (a.due_date) {
         doc.setFont('helvetica', 'normal'); doc.setTextColor(...GRAY); doc.setFontSize(8);
-        const ds = new Date(a.due_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const ds = fmtDateTime(a.due_date, a.due_time);
         doc.text(ds, pageW - margin - 3, y + 5.2, { align: 'right' });
       }
       y += 8;
@@ -4101,9 +4118,21 @@ function parseAssignImport() {
 
   // Canvas's Assignments page copy/paste is line-based: a name line,
   // followed shortly by a "Due <date>[ at <time>] | <weight>/<points> pts"
-  // line. Group lines into blocks, one per assignment, anchored on the
-  // "Due ..." line.
-  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  // line. When a due TIME is included, Canvas sometimes splits the due
+  // line and the points onto two separate lines — merge those back
+  // together first, or the points-only line gets misread as a new
+  // assignment's start.
+  const rawLines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const lines = [];
+  for (const line of rawLines) {
+    const isPtsOnly = /^\|?\s*-?\/?\d+(\.\d+)?\s*pts?\.?$/i.test(line);
+    const prev = lines[lines.length - 1];
+    if (isPtsOnly && prev && /\bdue\b/i.test(prev) && !/\d+\s*pts?\b/i.test(prev)) {
+      lines[lines.length - 1] = prev + ' ' + line;
+    } else {
+      lines.push(line);
+    }
+  }
   const blocks = [];
   let current = [];
   for (const line of lines) {
@@ -4161,13 +4190,24 @@ function parseAssignBlock(lines, courseId) {
   const weightMatch = full.match(/(\d+(?:\.\d+)?)\s*%/);
   if (weightMatch) weight = parseFloat(weightMatch[1]);
 
+  let due_time = null;
+  const timeMatch = full.match(/at\s+(\d{1,2}):(\d{2})\s*(am|pm)/i);
+  if (timeMatch) {
+    let h = parseInt(timeMatch[1], 10);
+    const m = timeMatch[2];
+    const ampm = timeMatch[3].toLowerCase();
+    if (ampm === 'pm' && h !== 12) h += 12;
+    if (ampm === 'am' && h === 12) h = 0;
+    due_time = `${String(h).padStart(2,'0')}:${m}`;
+  }
+
   const type = /discussion/i.test(full) ? 'Discussion'
     : /quiz/i.test(full) ? 'Quiz'
     : /exam/i.test(full) ? 'Exam'
     : /presentation/i.test(full) ? 'Presentation'
     : 'Assignment';
 
-  return { name, due_date, points, weight, type, course_id: courseId, _raw: full };
+  return { name, due_date, due_time, points, weight, type, course_id: courseId, _raw: full };
 }
 
 function renderImportAssignPreview() {
@@ -4182,6 +4222,8 @@ function renderImportAssignPreview() {
           <div style="display:flex;gap:10px;align-items:center;margin-top:4px;flex-wrap:wrap">
             <input type="date" value="${a.due_date || ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:2px 4px"
               onchange="importAssignParsed[${i}].due_date=this.value">
+            <input type="time" value="${a.due_time || ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:2px 4px"
+              onchange="importAssignParsed[${i}].due_time=this.value">
             <input type="number" placeholder="pts" value="${a.points ?? ''}" style="width:60px;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:2px 4px"
               onchange="importAssignParsed[${i}].points=parseFloat(this.value)||null">
             <span class="tag tag-gray" style="font-size:10px">${escHtml(a.type)}</span>
