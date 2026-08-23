@@ -4150,7 +4150,7 @@ function parseAssignImport() {
   // first, force line breaks back in before each "Due ..." and after each
   // points figure, regardless of whether real newlines survived the paste.
   let normalized = raw.replace(/([^\n])(\bDue\s+[A-Za-z]{3,9}\s+\d{1,2}\b)/gi, '$1\n$2');
-  normalized = normalized.replace(/(\d+(?:\.\d+)?\s*pts?\.?)\s*(?=\S)/gi, '$1\n');
+  normalized = normalized.replace(/(\d+(?:\.\d+)?\s*pts?)\b\.?\s*(?=\S)/gi, '$1\n');
 
   // Canvas sometimes also splits a due line and its points onto two
   // separate real lines (when a due TIME is included) — merge those back
@@ -4235,10 +4235,10 @@ function parseAssignBlock(lines, courseId) {
     due_time = `${String(h).padStart(2,'0')}:${m}`;
   }
 
-  const type = /discussion/i.test(full) ? 'Discussion'
-    : /quiz/i.test(full) ? 'Quiz'
-    : /exam/i.test(full) ? 'Exam'
-    : /presentation/i.test(full) ? 'Presentation'
+  const type = /\bdiscussion\b/i.test(full) ? 'Discussion'
+    : /\bquiz\b/i.test(full) ? 'Quiz'
+    : /\bexam\b/i.test(full) ? 'Exam'
+    : /\bpresentation\b/i.test(full) ? 'Presentation'
     : 'Assignment';
 
   return { name, due_date, due_time, points, weight, type, course_id: courseId, _raw: full };
