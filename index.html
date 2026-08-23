@@ -469,6 +469,15 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 .completed-row td { opacity: .45; }
 .completed-row td .dl-name { text-decoration: line-through; }
 
+/* ── IMPORTANT ASSIGNMENT HIGHLIGHT ── */
+/* Deliberately a different accent from "due today" (gold/garnet) so the
+   two signals never blur together — Westcott Water in dark mode, Legacy
+   Blue in light mode. */
+.important-star { color: #5CB8B2; font-size: 13px; margin-left: 5px; vertical-align: middle; }
+[data-theme="light"] .important-star { color: #425563; }
+.tbl tr.important-assign td:nth-child(2) { border-left: 3px solid #5CB8B2; }
+[data-theme="light"] .tbl tr.important-assign td:nth-child(2) { border-left-color: #425563; }
+
 /* ── TOAST ── */
 .toast {
   position: fixed;
@@ -1069,6 +1078,10 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;margin-top:8px">
         <input type="checkbox" id="assignOptional" style="width:auto">
         Optional (not required)
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;margin-top:8px">
+        <input type="checkbox" id="assignImportant" style="width:auto">
+        <i class="ti ti-star-filled" style="font-size:13px;color:#425563"></i> Mark as Important (heavily weighted, high stakes)
       </label>
     </div>
     <div class="form-row">
@@ -2208,12 +2221,14 @@ function renderAssignments() {
     const c = courseById(a.course_id);
     const hasNotes = !!(a.notes && a.notes.trim()) || notes.some(n => n.assignment_id === a.id);
     const dueTodayCls = (!a.completed && isDueToday(a.due_date)) ? 'due-today' : '';
+    const importantCls = a.is_important ? 'important-assign' : '';
     const hasResponses = a.responses_required > 0;
-    return `<tr class="${dueTodayCls}" data-id="${a.id}">
+    return `<tr class="${dueTodayCls} ${importantCls}" data-id="${a.id}">
       <td>${a.completed ? '' : '<i class="ti ti-grip-vertical drag-handle"></i>'}</td>
       <td>${hasResponses ? responseDots(a) : `<div class="check-circle ${a.completed ? 'done' : ''}" onclick="toggleAssign('${a.id}', event)"></div>`}</td>
       <td>
         <span class="dl-name" style="cursor:pointer;${a.completed ? 'opacity:.55;text-decoration:line-through' : ''}" onclick="openAssignmentNotes('${a.id}')">${a.name}</span>
+        ${a.is_important ? `<i class="ti ti-star-filled important-star" title="Marked important"></i>` : ''}
         ${a.optional ? `<span class="tag tag-gray" style="font-size:9px;margin-left:5px;vertical-align:middle">OPTIONAL</span>` : ''}
         ${hasResponses ? `<span class="tag tag-gray" style="font-size:9px;margin-left:5px;vertical-align:middle">${a.responses_done||0}/${a.responses_required} responses</span>` : ''}
         ${hasNotes ? `<i class="ti ti-notes" title="Has notes" style="font-size:12px;color:var(--text3);margin-left:5px;cursor:pointer" onclick="openAssignmentNotes('${a.id}')"></i>` : ''}
@@ -2328,6 +2343,7 @@ function openAddAssignment() {
   document.getElementById('assignNotes').value = '';
   document.getElementById('assignPassFail').checked = false;
   document.getElementById('assignOptional').checked = false;
+  document.getElementById('assignImportant').checked = false;
   document.getElementById('assignResponsesRequired').value = '';
   toggleAssignPassFailUI();
   document.getElementById('assignModalTitle').textContent = 'Add Assignment';
@@ -2351,6 +2367,7 @@ function editAssignment(id) {
   document.getElementById('assignNotes').value = a.notes || '';
   document.getElementById('assignPassFail').checked = !!a.pass_fail;
   document.getElementById('assignOptional').checked = !!a.optional;
+  document.getElementById('assignImportant').checked = !!a.is_important;
   document.getElementById('assignResponsesRequired').value = a.responses_required ?? '';
   toggleAssignPassFailUI();
   document.getElementById('assignModalTitle').textContent = 'Edit Assignment';
@@ -2377,6 +2394,7 @@ async function saveAssignment() {
     points: isPF ? null : (parseFloat(document.getElementById('assignPoints').value) || null),
     pass_fail: isPF,
     optional: document.getElementById('assignOptional').checked,
+    is_important: document.getElementById('assignImportant').checked,
     responses_required: responsesRequired,
     notes: document.getElementById('assignNotes').value.trim()
   };
@@ -4122,11 +4140,17 @@ function parseAssignImport() {
 
   // Canvas's Assignments page copy/paste is line-based: a name line,
   // followed shortly by a "Due <date>[ at <time>] | <weight>/<points> pts"
-  // line. When a due TIME is included, Canvas sometimes splits the due
-  // line and the points onto two separate lines — merge those back
-  // together first, or the points-only line gets misread as a new
-  // assignment's start.
-  const rawLines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  // line. On iPad, copying rendered page content sometimes loses the line
+  // breaks entirely, pasting everything as one flattened run of text — so
+  // first, force line breaks back in before each "Due ..." and after each
+  // points figure, regardless of whether real newlines survived the paste.
+  let normalized = raw.replace(/([^\n])(\bDue\s+[A-Za-z]{3,9}\s+\d{1,2}\b)/gi, '$1\n$2');
+  normalized = normalized.replace(/(\d+(?:\.\d+)?\s*pts?\.?)\s*(?=\S)/gi, '$1\n');
+
+  // Canvas sometimes also splits a due line and its points onto two
+  // separate real lines (when a due TIME is included) — merge those back
+  // together, or the points-only line gets misread as a new assignment.
+  const rawLines = normalized.split('\n').map(l => l.trim()).filter(Boolean);
   const lines = [];
   for (const line of rawLines) {
     const isPtsOnly = /^\|?\s*-?\/?\d+(\.\d+)?\s*pts?\.?$/i.test(line);
@@ -4150,7 +4174,8 @@ function parseAssignImport() {
 
   importAssignParsed = blocks
     .map(block => parseAssignBlock(block, courseId))
-    .filter(a => a.name);
+    .filter(a => a.name || a._raw)
+    .map(a => a.name ? a : { ...a, name: '(untitled — click to edit)' });
 
   if (!importAssignParsed.length) { showToast('No assignments detected — try adjusting the text'); return; }
 
