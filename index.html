@@ -4134,9 +4134,14 @@ function backToImportAssignStep1() {
 }
 
 function parseAssignImport() {
-  const raw = document.getElementById('importAssignText').value.trim();
+  let raw = document.getElementById('importAssignText').value.trim();
   if (!raw) { showToast('Paste some text first'); return; }
   const courseId = document.getElementById('importAssignCourse').value;
+
+  // iOS sometimes converts a copied link into Markdown format —
+  // [Assignment Title](https://...) — strip that down to just the
+  // visible title before anything else touches the text.
+  raw = raw.replace(/\[([^\]]+)\]\(https?:\/\/[^\)]+\)/g, '$1');
 
   // Canvas's Assignments page copy/paste is line-based: a name line,
   // followed shortly by a "Due <date>[ at <time>] | <weight>/<points> pts"
@@ -4174,8 +4179,8 @@ function parseAssignImport() {
 
   importAssignParsed = blocks
     .map(block => parseAssignBlock(block, courseId))
-    .filter(a => a.name || a._raw)
-    .map(a => a.name ? a : { ...a, name: '(untitled — click to edit)' });
+    .filter(a => (a.name && a.name.trim()) || a.due_date || a.points || a.weight)
+    .map(a => (a.name && a.name.trim()) ? a : { ...a, name: '(untitled — click to edit)' });
 
   if (!importAssignParsed.length) { showToast('No assignments detected — try adjusting the text'); return; }
 
@@ -4246,7 +4251,7 @@ function renderImportAssignPreview() {
       <div style="display:flex;align-items:flex-start;gap:10px">
         <input type="checkbox" ${a._checked ? 'checked' : ''} onchange="importAssignParsed[${i}]._checked=this.checked" style="width:auto;margin-top:4px">
         <div style="flex:1;min-width:0">
-          <textarea rows="1" style="font-size:13px;font-weight:600;border:none;background:transparent;padding:0;width:100%;color:var(--text);resize:vertical;overflow:hidden;word-break:break-word;font-family:inherit;line-height:1.4"
+          <textarea rows="1" style="font-size:13px;font-weight:600;border:none;background:transparent;padding:0;width:100%;min-height:19px;color:var(--text);resize:vertical;overflow:hidden;word-break:break-word;font-family:inherit;line-height:1.4"
             oninput="importAssignParsed[${i}].name=this.value; this.style.height='auto'; this.style.height=this.scrollHeight+'px';"
             onfocus="this.style.height='auto'; this.style.height=this.scrollHeight+'px';">${escHtml(a.name)}</textarea>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
