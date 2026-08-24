@@ -2186,7 +2186,7 @@ function renderAssignments() {
   const semCourseIds = new Set(semCourses.map(c => c.id));
   let list = assignments.filter(a => semCourseIds.has(a.course_id));
   if (currentCourseFilter !== 'all') {
-    const c = courses.find(x => x.code === currentCourseFilter);
+    const c = semCourses.find(x => x.code === currentCourseFilter);
     if (c) list = list.filter(a => a.course_id === c.id);
   }
   list.sort((a,b) => {
@@ -2464,7 +2464,7 @@ function renderReadings() {
 
   let list = [...semReadings];
   if (currentReadFilter !== 'all') {
-    const c = courses.find(x => x.code === currentReadFilter);
+    const c = semCourses.find(x => x.code === currentReadFilter);
     if (c) list = list.filter(r => r.course_id === c.id);
   }
 
@@ -4229,16 +4229,25 @@ function parseAssignBlock(lines, courseId) {
   name = name.replace(/^([-•·*]\s+|\d+[.)]\s+)/, '').trim();
 
   let due_date = null;
-  const dateMatch = full.match(/due\s+([A-Za-z]{3,9})\s+(\d{1,2})/i);
-  if (dateMatch) {
+  let due_time = null;
+  const dueMatch = full.match(/\bdue\s+([A-Za-z]{3,9})\s+(\d{1,2})(?:st|nd|rd|th)?(?:\s*,?\s*at\s+(\d{1,2}):(\d{2})\s*(am|pm))?/i);
+  if (dueMatch) {
     const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-    const mi = monthNames.indexOf(dateMatch[1].slice(0,3).toLowerCase());
+    const mi = monthNames.indexOf(dueMatch[1].slice(0,3).toLowerCase());
     if (mi > -1) {
-      const day = parseInt(dateMatch[2], 10);
+      const day = parseInt(dueMatch[2], 10);
       const semNow = getViewingSemester();
       const yearGuess = semNow.start_date ? new Date(semNow.start_date).getFullYear() : new Date().getFullYear();
       const dt = new Date(yearGuess, mi, day);
       due_date = dt.toISOString().slice(0, 10);
+    }
+    if (dueMatch[3]) {
+      let h = parseInt(dueMatch[3], 10);
+      const m = dueMatch[4];
+      const ampm = dueMatch[5].toLowerCase();
+      if (ampm === 'pm' && h !== 12) h += 12;
+      if (ampm === 'am' && h === 12) h = 0;
+      due_time = `${String(h).padStart(2,'0')}:${m}`;
     }
   }
 
@@ -4249,17 +4258,6 @@ function parseAssignBlock(lines, courseId) {
   let weight = null;
   const weightMatch = full.match(/(\d+(?:\.\d+)?)\s*%/);
   if (weightMatch) weight = parseFloat(weightMatch[1]);
-
-  let due_time = null;
-  const timeMatch = full.match(/at\s+(\d{1,2}):(\d{2})\s*(am|pm)/i);
-  if (timeMatch) {
-    let h = parseInt(timeMatch[1], 10);
-    const m = timeMatch[2];
-    const ampm = timeMatch[3].toLowerCase();
-    if (ampm === 'pm' && h !== 12) h += 12;
-    if (ampm === 'am' && h === 12) h = 0;
-    due_time = `${String(h).padStart(2,'0')}:${m}`;
-  }
 
   const type = labelType || (/\bdiscussion\b/i.test(full) ? 'Discussion'
     : /\bquiz\b/i.test(full) ? 'Quiz'
