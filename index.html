@@ -4267,7 +4267,12 @@ function parseAssignBlock(lines, courseId) {
     : /\bpresentation\b/i.test(full) ? 'Presentation'
     : 'Assignment');
 
-  return { name, due_date, due_time, points, weight, type, course_id: courseId, _raw: full };
+  // No points at all, or explicitly 0, and no weight either — these are
+  // effectively pass/fail items (did you do it or not), not graded on a
+  // point scale. Default to pass/fail; easy to uncheck in the preview.
+  const pass_fail = (points === null || points === 0) && weight === null;
+
+  return { name, due_date, due_time, points, weight, type, pass_fail, course_id: courseId, _raw: full };
 }
 
 function renderImportAssignPreview() {
@@ -4285,10 +4290,14 @@ function renderImportAssignPreview() {
               onchange="importAssignParsed[${i}].due_date=this.value">
             <input type="time" value="${a.due_time || ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:4px 6px;width:100%"
               onchange="importAssignParsed[${i}].due_time=this.value">
-            <input type="number" placeholder="pts" value="${a.points ?? ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:4px 6px;width:100%"
+            <input type="number" placeholder="pts" value="${a.points ?? ''}" style="font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:4px;padding:4px 6px;width:100%" ${a.pass_fail ? 'disabled' : ''}
               onchange="importAssignParsed[${i}].points=parseFloat(this.value)||null">
             <span class="tag tag-gray" style="font-size:10px;display:flex;align-items:center;justify-content:center">${escHtml(a.type)}</span>
           </div>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" ${a.pass_fail ? 'checked' : ''} style="width:auto" onchange="importAssignParsed[${i}].pass_fail=this.checked; renderImportAssignPreview();">
+            Pass/Fail (no points or %)${a.pass_fail ? ' — no points found, defaulted on' : ''}
+          </label>
         </div>
       </div>
     </div>
@@ -4302,6 +4311,7 @@ async function confirmAssignImport() {
   let added = 0;
   for (const a of chosen) {
     const { _checked, _raw, ...rest } = a;
+    if (rest.pass_fail) { rest.points = null; rest.weight = null; }
     const result = await sb('POST', 'assignments', { ...rest, notes: '', completed: false });
     assignments.push(result[0]);
     added++;
