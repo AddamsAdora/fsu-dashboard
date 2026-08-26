@@ -64,6 +64,29 @@
   --text3:      rgba(36,16,22,0.44);
 }
 
+/* vibrant mode — light background like the export PDF, using the same
+   punchy pink/gold/turquoise from the exported reports instead of the
+   muted brand colors. Chosen deliberately, not a mistake — kept separate
+   from the dark/light toggle by design. */
+[data-theme="vibrant"] {
+  --pink:       #FF2D78;
+  --pink-dim:   #CC0F5C;
+  --pink-glow:  rgba(255,45,120,0.22);
+  --teal:       #00C9A7;
+  --teal-dim:   #00A085;
+  --teal-glow:  rgba(0,201,167,0.18);
+  --gold:       #FFB830;
+  --sands:      #FFD980;
+  --surface:    rgba(87,41,50,0.07);
+  --surface2:   rgba(87,41,50,0.1);
+  --surface3:   rgba(87,41,50,0.15);
+  --border:     rgba(87,41,50,0.18);
+  --border2:    rgba(87,41,50,0.3);
+  --text:       #241016;
+  --text2:      rgba(36,16,22,0.68);
+  --text3:      rgba(36,16,22,0.44);
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -605,6 +628,82 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
   box-shadow: 0 8px 24px rgba(120,47,64,0.3) !important;
 }
 
+[data-theme="vibrant"] .topnav {
+  background: linear-gradient(90deg, #FFB830 0%, #FFD980 60%, #f2ead9 100%);
+  border-bottom-color: rgba(87,41,50,0.16);
+}
+[data-theme="vibrant"] .drawer {
+  background: linear-gradient(180deg, #FFB830 0%, #FFD980 100%);
+  border-right-color: rgba(87,41,50,0.18);
+}
+[data-theme="vibrant"] .drawer-links a,
+[data-theme="vibrant"] .drawer-dark { color: rgba(36,16,22,0.78); }
+[data-theme="vibrant"] .drawer-display-label { color: rgba(36,16,22,0.7); }
+[data-theme="vibrant"] .drawer-select-label { color: rgba(36,16,22,0.7); }
+[data-theme="vibrant"] .drawer-select { background: rgba(255,255,255,0.5); color: #241016; border-color: rgba(87,41,50,0.3); }
+[data-theme="vibrant"] .drawer-select option { background: #fff; color: #241016; }
+[data-theme="vibrant"] .drawer-links a:hover,
+[data-theme="vibrant"] .drawer-links a.active { background: rgba(255,45,120,0.85); color: #fff; }
+[data-theme="vibrant"] .topnav-title { color: #241016; }
+[data-theme="vibrant"] .topnav-links a:hover { color: #241016; background: rgba(87,41,50,0.1); }
+[data-theme="vibrant"] .topnav-title span { color: #CC0F5C; }
+[data-theme="vibrant"] .topnav-links a { color: rgba(36,16,22,0.7); }
+[data-theme="vibrant"] .topnav-links a.active { background: rgba(255,45,120,0.85); color: #fff; }
+[data-theme="vibrant"] .dark-btn,
+[data-theme="vibrant"] .hamburger {
+  background: rgba(87,41,50,0.1);
+  border-color: rgba(87,41,50,0.2);
+  color: #241016;
+}
+[data-theme="vibrant"] .dark-btn:hover,
+[data-theme="vibrant"] .hamburger:hover { color: #241016; background: rgba(87,41,50,0.18); }
+[data-theme="vibrant"] .today-hero {
+  background: linear-gradient(135deg, #CC8A00 0%, #FFB830 45%, #FFD980 100%);
+  color: #241016;
+  box-shadow: 0 16px 40px rgba(255,184,48,0.22);
+}
+[data-theme="vibrant"] .today-hero h2 { color: #241016; }
+[data-theme="vibrant"] .today-hero p { color: rgba(36,16,22,0.7); opacity: 1; }
+[data-theme="vibrant"] .card,
+[data-theme="vibrant"] .focus-item,
+[data-theme="vibrant"] .week-card,
+[data-theme="vibrant"] .note-card,
+[data-theme="vibrant"] .milestone-item,
+[data-theme="vibrant"] .conn-card,
+[data-theme="vibrant"] .stat-card,
+[data-theme="vibrant"] .setup-card,
+[data-theme="vibrant"] .modal {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(87,41,50,0.14);
+  box-shadow: 0 8px 28px rgba(255,184,48,0.10);
+}
+[data-theme="vibrant"] .modal { background: #fffdf8; }
+[data-theme="vibrant"] input,
+[data-theme="vibrant"] textarea,
+[data-theme="vibrant"] select {
+  background: rgba(255,255,255,0.92);
+  color: var(--text);
+  border-color: rgba(87,41,50,0.2);
+}
+[data-theme="vibrant"] option { background: #fffdf8; color: var(--text); }
+[data-theme="vibrant"] .section-title { color: rgba(36,16,22,0.55); }
+[data-theme="vibrant"] .focus-content strong,
+[data-theme="vibrant"] .reading-title { color: var(--text); }
+[data-theme="vibrant"] .focus-content span { color: var(--text2); }
+[data-theme="vibrant"] .course-card.c-garnet { background: linear-gradient(135deg, #CC0F5C 0%, #FF2D78 60%, #FF6B9E 100%); }
+[data-theme="vibrant"] .course-card.c-gold   { background: linear-gradient(135deg, #7A4700 0%, #E6A31A 55%, #FFB830 100%); }
+[data-theme="vibrant"] .course-card.c-blue   { background: linear-gradient(135deg, #00A085 0%, #00C9A7 55%, #33D9BB 100%); }
+[data-theme="vibrant"] .tag-garnet { background: rgba(255,45,120,0.12); color: #CC0F5C; border-color: rgba(255,45,120,0.4); }
+[data-theme="vibrant"] .tag-gold { background: rgba(255,184,48,0.2); color: #7A4700; border-color: rgba(255,184,48,0.48); }
+[data-theme="vibrant"] .tag-blue { background: rgba(0,201,167,0.14); color: #00A085; border-color: rgba(0,201,167,0.4); }
+[data-theme="vibrant"] .tag-gray { background: rgba(87,41,50,0.07); color: rgba(36,16,22,0.6); border-color: rgba(87,41,50,0.14); }
+[data-theme="vibrant"] .tag-green { background: rgba(34,197,94,0.14); color: #15803d; border-color: rgba(34,197,94,0.35); }
+[data-theme="vibrant"] .float-note,
+[data-theme="vibrant"] #floatNoteBtn {
+  background: linear-gradient(135deg, #FF2D78, #FFB830) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 24px rgba(255,45,120,0.3) !important;
+}
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .topnav-links { display: none; }
@@ -678,6 +777,10 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
   </div>
   <div class="topnav-right">
     <select id="semesterSwitcher" onchange="setViewingSemester(this.value)" title="Switch semester" style="width:auto;padding:6px 10px;font-size:12px;font-weight:600;border-radius:var(--radius-sm)"></select>
+    <select id="vibrantSelect" onchange="setVibrantMode(this.value)" title="Color style" style="width:auto;padding:6px 10px;font-size:12px;font-weight:600;border-radius:var(--radius-sm)">
+      <option value="off">Default</option>
+      <option value="on">Vibrant</option>
+    </select>
     <button class="dark-btn" onclick="openManageSemesters()" title="Add / edit semesters and courses"><i class="ti ti-settings"></i></button>
     <button class="dark-btn" onclick="toggleDarkMode()" id="darkBtn" title="Toggle dark mode"><i class="ti ti-moon"></i></button>
   </div>
@@ -1615,6 +1718,7 @@ async function launch() {
   if (!semesters.length) await seedData();
   renderSemesterSwitcher();
   initDark();
+  initVibrant();
   initFontPrefs();
   nav('today');
 }
@@ -1656,7 +1760,18 @@ function initDark() {
   applyDark(dark);
 }
 function toggleDarkMode() {
-  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const current = document.documentElement.getAttribute('data-theme');
+  if (current === 'vibrant') {
+    // Leaving vibrant via the dark/light toggle — turn it off and flip
+    // from whichever dark/light state was underneath it.
+    localStorage.setItem('vibrantMode', 'false');
+    const sel = document.getElementById('vibrantSelect');
+    if (sel) sel.value = 'off';
+    const wasDark = localStorage.getItem('darkMode') !== 'false';
+    applyDark(!wasDark);
+    return;
+  }
+  const isLight = current === 'light';
   applyDark(isLight); // if currently light, switch to dark; if dark (no attr), switch to light
 }
 function applyDark(dark) {
@@ -1666,6 +1781,23 @@ function applyDark(dark) {
   if (btn) btn.innerHTML = dark ? '<i class="ti ti-sun"></i>' : '<i class="ti ti-moon"></i>';
   const tog = document.getElementById('darkToggleDrawer');
   if (tog) tog.checked = !dark;
+}
+
+function setVibrantMode(val) {
+  const isVibrant = val === 'on';
+  localStorage.setItem('vibrantMode', String(isVibrant));
+  if (isVibrant) {
+    document.documentElement.setAttribute('data-theme', 'vibrant');
+  } else {
+    const wasDark = localStorage.getItem('darkMode') !== 'false';
+    applyDark(wasDark);
+  }
+}
+function initVibrant() {
+  const saved = localStorage.getItem('vibrantMode') === 'true';
+  const sel = document.getElementById('vibrantSelect');
+  if (sel) sel.value = saved ? 'on' : 'off';
+  if (saved) document.documentElement.setAttribute('data-theme', 'vibrant');
 }
 
 // ── FONT CUSTOMIZATION ────────────────────────────
@@ -3677,9 +3809,9 @@ function downloadExportPDF() {
   const { jsPDF } = window.jspdf;
   if (!jsPDF) { showToast('PDF library not loaded yet — try again in a moment'); return; }
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const GARNET = [255, 45, 120];
-  const GOLD   = [255, 184, 48];
-  const BLUE   = [0, 201, 167];
+  const GARNET = [120, 47, 64];   // FSU Garnet #782F40
+  const GOLD   = [206, 184, 136]; // FSU Gold #CEB888
+  const BLUE   = [66, 85, 99];    // FSU Legacy Blue #425563
   const DARK   = [30, 28, 24];
   const GRAY   = [110, 108, 101];
   const LGRAY  = [220, 218, 214];
@@ -3751,7 +3883,8 @@ function downloadExportPDF() {
     // Course header
     doc.setFillColor(...col);
     doc.roundedRect(margin, y, contentW, 11, 2, 2, 'F');
-    doc.setTextColor(255, 255, 255);
+    const headerTextIsDark = ci === 1; // Gold background needs dark text, not white
+    doc.setTextColor(...(headerTextIsDark ? DARK : [255, 255, 255]));
     doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
     doc.text(c.code + '  —  ' + c.name, margin + 4, y + 7.5);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
@@ -3775,7 +3908,8 @@ function downloadExportPDF() {
       doc.text(label, margin + 5, y + 5.2, { maxWidth: contentW - 46 });
       const gradeStr = formatGradeDisplay(a);
       if (gradeStr !== '—') {
-        doc.setFont('helvetica', 'bold'); doc.setTextColor(...col); doc.setFontSize(8);
+        const gradeIsDark = ci === 1; // bright gold on a light row background is hard to read too
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(...(gradeIsDark ? DARK : col)); doc.setFontSize(8);
         doc.text(gradeStr, pageW - margin - 22, y + 5.2, { align: 'right' });
       }
       if (a.due_date) {
@@ -3807,7 +3941,8 @@ function downloadExportPDF() {
     const col = readCols[ci] || GARNET;
     doc.setFillColor(...col.map(v => Math.min(255, v + 60)));
     doc.roundedRect(margin, y, contentW, 8, 1, 1, 'F');
-    doc.setTextColor(255, 255, 255);
+    const readHeaderIsDark = ci === 1; // Gold background needs dark text, not white
+    doc.setTextColor(...(readHeaderIsDark ? DARK : [255, 255, 255]));
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
     doc.text(c.code, margin + 4, y + 5.5);
     doc.setFont('helvetica', 'normal');
@@ -4342,6 +4477,7 @@ async function syncCourseColors() {
   } else {
     document.getElementById('setupScreen').style.display = 'flex';
     initDark();
+  initVibrant();
     initFontPrefs();
   }
 })();
