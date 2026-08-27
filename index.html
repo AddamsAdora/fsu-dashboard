@@ -122,6 +122,17 @@ body::before {
 
 [data-theme="light"] body { background: #fbf7ef; }
 
+[data-theme="vibrant"] body::before {
+  background:
+    radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(255,45,120,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%,  rgba(255,184,48,0.28) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 100% 100%,rgba(0,201,167,0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 0% 100%,  rgba(255,184,48,0.16) 0%, transparent 50%),
+    #fffdf8;
+}
+
+[data-theme="vibrant"] body { background: #fffdf8; }
+
 /* ── TOP NAV ── */
 .topnav {
   position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
@@ -144,31 +155,51 @@ body::before {
   letter-spacing: .5px; text-transform: uppercase;
 }
 .topnav-title span { color: var(--gold); }
-.topnav-links { display: flex; align-items: center; gap: 1px; margin-left: 20px; flex: 1; }
+.topnav-links {
+  display: flex; align-items: center; gap: 1px; margin-left: 20px; flex: 1;
+  min-width: 0; overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.25) transparent;
+}
+.topnav-links::-webkit-scrollbar { height: 4px; }
+.topnav-links::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 4px; }
+.topnav-links::-webkit-scrollbar-track { background: transparent; }
 .topnav-links a {
   padding: 5px 11px; border-radius: var(--radius-sm);
   color: rgba(255,255,255,0.6); text-decoration: none;
   font-size: 13px; font-weight: 500;
-  display: flex; align-items: center; gap: 5px;
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
   transition: background .12s, color .12s; white-space: nowrap;
 }
 .topnav-links a:hover { background: rgba(255,255,255,0.08); color: #fff; }
 .topnav-links a.active { background: rgba(206,184,136,0.18); color: var(--gold); }
 .topnav-links a i { font-size: 15px; }
-.topnav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.topnav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
 .dark-btn {
   width: 34px; height: 34px; border-radius: var(--radius-sm); border: 1px solid var(--border);
   cursor: pointer; background: var(--surface); color: var(--text2);
   display: flex; align-items: center; justify-content: center; font-size: 17px;
-  transition: background .12s;
+  transition: background .12s; flex-shrink: 0;
 }
 .dark-btn:hover { background: var(--surface2); color: var(--text); }
 .hamburger {
   display: flex; width: 34px; height: 34px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); cursor: pointer;
   background: var(--surface); color: var(--text2);
-  align-items: center; justify-content: center; font-size: 19px;
+  align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0;
 }
+.theme-switch {
+  display: flex; align-items: center; gap: 2px; padding: 3px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+.theme-btn {
+  width: 28px; height: 28px; border: none; border-radius: 5px;
+  background: transparent; color: rgba(255,255,255,0.6); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+  transition: background .12s, color .12s;
+}
+.theme-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.theme-btn.active { background: rgba(206,184,136,0.18); color: var(--gold); }
 
 /* ── DRAWER ── */
 .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; }
@@ -573,13 +604,17 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 [data-theme="light"] .topnav-links a { color: rgba(36,16,22,0.7); }
 [data-theme="light"] .topnav-links a.active { background: rgba(120,47,64,0.85); color: #fff; }
 [data-theme="light"] .dark-btn,
-[data-theme="light"] .hamburger {
+[data-theme="light"] .hamburger,
+[data-theme="light"] .theme-switch {
   background: rgba(87,41,50,0.1);
   border-color: rgba(87,41,50,0.2);
   color: #241016;
 }
 [data-theme="light"] .dark-btn:hover,
 [data-theme="light"] .hamburger:hover { color: #241016; background: rgba(87,41,50,0.18); }
+[data-theme="light"] .theme-btn { color: rgba(36,16,22,0.6); }
+[data-theme="light"] .theme-btn:hover { color: #241016; background: rgba(87,41,50,0.1); }
+[data-theme="light"] .theme-btn.active { background: rgba(120,47,64,0.85); color: #fff; }
 [data-theme="light"] .today-hero {
   background: linear-gradient(135deg, #8a6a1e 0%, #CEB888 45%, #DFD1A7 100%);
   color: #241016;
@@ -650,13 +685,17 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
 [data-theme="vibrant"] .topnav-links a { color: rgba(36,16,22,0.7); }
 [data-theme="vibrant"] .topnav-links a.active { background: rgba(255,45,120,0.85); color: #fff; }
 [data-theme="vibrant"] .dark-btn,
-[data-theme="vibrant"] .hamburger {
+[data-theme="vibrant"] .hamburger,
+[data-theme="vibrant"] .theme-switch {
   background: rgba(87,41,50,0.1);
   border-color: rgba(87,41,50,0.2);
   color: #241016;
 }
 [data-theme="vibrant"] .dark-btn:hover,
 [data-theme="vibrant"] .hamburger:hover { color: #241016; background: rgba(87,41,50,0.18); }
+[data-theme="vibrant"] .theme-btn { color: rgba(36,16,22,0.6); }
+[data-theme="vibrant"] .theme-btn:hover { color: #241016; background: rgba(87,41,50,0.1); }
+[data-theme="vibrant"] .theme-btn.active { background: rgba(255,45,120,0.85); color: #fff; }
 [data-theme="vibrant"] .today-hero {
   background: linear-gradient(135deg, #CC8A00 0%, #FFB830 45%, #FFD980 100%);
   color: #241016;
@@ -724,7 +763,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
   .export-grid { grid-template-columns: 1fr; }
 }
 @media print {
-  .topnav, .filter-bar, .btn, .hamburger, .dark-btn { display: none !important; }
+  .topnav, .filter-bar, .btn, .hamburger, .dark-btn, .theme-switch { display: none !important; }
   .main { margin: 0; padding: 20px; }
   .page { display: block !important; }
 }
@@ -777,12 +816,12 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
   </div>
   <div class="topnav-right">
     <select id="semesterSwitcher" onchange="setViewingSemester(this.value)" title="Switch semester" style="width:auto;padding:6px 10px;font-size:12px;font-weight:600;border-radius:var(--radius-sm)"></select>
-    <select id="vibrantSelect" onchange="setVibrantMode(this.value)" title="Color style" style="width:auto;padding:6px 10px;font-size:12px;font-weight:600;border-radius:var(--radius-sm)">
-      <option value="off">Default</option>
-      <option value="on">Vibrant</option>
-    </select>
+    <div class="theme-switch" id="themeSwitch" role="group" aria-label="Color theme">
+      <button class="theme-btn" data-mode="light" onclick="setThemeMode('light')" title="Light mode"><i class="ti ti-sun"></i></button>
+      <button class="theme-btn" data-mode="dark" onclick="setThemeMode('dark')" title="Dark mode"><i class="ti ti-moon"></i></button>
+      <button class="theme-btn" data-mode="vibrant" onclick="setThemeMode('vibrant')" title="Vibrant mode"><i class="ti ti-palette"></i></button>
+    </div>
     <button class="dark-btn" onclick="openManageSemesters()" title="Add / edit semesters and courses"><i class="ti ti-settings"></i></button>
-    <button class="dark-btn" onclick="toggleDarkMode()" id="darkBtn" title="Toggle dark mode"><i class="ti ti-moon"></i></button>
   </div>
 </nav>
 
@@ -1717,8 +1756,7 @@ async function launch() {
   await syncCourseColors();
   if (!semesters.length) await seedData();
   renderSemesterSwitcher();
-  initDark();
-  initVibrant();
+  initThemeMode();
   initFontPrefs();
   nav('today');
 }
@@ -1753,51 +1791,41 @@ async function seedData() {
   renderAll();
 }
 
-// ── DARK MODE ─────────────────────────────────────
-function initDark() {
-  const saved = localStorage.getItem('darkMode');
-  const dark = saved !== null ? saved !== 'false' : true;
-  applyDark(dark);
+// ── THEME MODE (light / dark / vibrant) ───────────
+// data-theme is '' for dark (dark is the unmarked/default palette — see
+// :root above), 'light', or 'vibrant'. themeMode in localStorage is always
+// one of the three explicit strings.
+function setThemeMode(mode) {
+  document.documentElement.setAttribute('data-theme', mode === 'dark' ? '' : mode);
+  localStorage.setItem('themeMode', mode);
+  updateThemeModeUI(mode);
 }
-function toggleDarkMode() {
-  const current = document.documentElement.getAttribute('data-theme');
-  if (current === 'vibrant') {
-    // Leaving vibrant via the dark/light toggle — turn it off and flip
-    // from whichever dark/light state was underneath it.
-    localStorage.setItem('vibrantMode', 'false');
-    const sel = document.getElementById('vibrantSelect');
-    if (sel) sel.value = 'off';
-    const wasDark = localStorage.getItem('darkMode') !== 'false';
-    applyDark(!wasDark);
-    return;
-  }
-  const isLight = current === 'light';
-  applyDark(isLight); // if currently light, switch to dark; if dark (no attr), switch to light
-}
-function applyDark(dark) {
-  document.documentElement.setAttribute('data-theme', dark ? '' : 'light');
-  localStorage.setItem('darkMode', String(dark));
-  const btn = document.getElementById('darkBtn');
-  if (btn) btn.innerHTML = dark ? '<i class="ti ti-sun"></i>' : '<i class="ti ti-moon"></i>';
+function updateThemeModeUI(mode) {
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
   const tog = document.getElementById('darkToggleDrawer');
-  if (tog) tog.checked = !dark;
+  if (tog) tog.checked = (mode === 'dark');
 }
-
-function setVibrantMode(val) {
-  const isVibrant = val === 'on';
-  localStorage.setItem('vibrantMode', String(isVibrant));
-  if (isVibrant) {
-    document.documentElement.setAttribute('data-theme', 'vibrant');
-  } else {
-    const wasDark = localStorage.getItem('darkMode') !== 'false';
-    applyDark(wasDark);
+function initThemeMode() {
+  let mode = localStorage.getItem('themeMode');
+  if (mode === null) {
+    // One-time migration from the old separate darkMode/vibrantMode keys.
+    if (localStorage.getItem('vibrantMode') === 'true') {
+      mode = 'vibrant';
+    } else {
+      const oldDark = localStorage.getItem('darkMode');
+      mode = oldDark === 'false' ? 'light' : 'dark';
+    }
   }
+  setThemeMode(mode);
 }
-function initVibrant() {
-  const saved = localStorage.getItem('vibrantMode') === 'true';
-  const sel = document.getElementById('vibrantSelect');
-  if (sel) sel.value = saved ? 'on' : 'off';
-  if (saved) document.documentElement.setAttribute('data-theme', 'vibrant');
+// Back-compat shim: the drawer's "Dark mode" switch is a simple on/off
+// toggle, so it can only choose between dark and light (leaving vibrant
+// mode drops into dark, matching the old toggle's behavior).
+function toggleDarkMode() {
+  const current = localStorage.getItem('themeMode') || 'dark';
+  setThemeMode(current === 'dark' ? 'light' : 'dark');
 }
 
 // ── FONT CUSTOMIZATION ────────────────────────────
@@ -4476,8 +4504,7 @@ async function syncCourseColors() {
     launch();
   } else {
     document.getElementById('setupScreen').style.display = 'flex';
-    initDark();
-  initVibrant();
+    initThemeMode();
     initFontPrefs();
   }
 })();
