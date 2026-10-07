@@ -3987,6 +3987,17 @@ function downloadExportPDF() {
 
   function newPage() { doc.addPage(); y = 18; }
   function checkY(need) { if (y + need > 274) newPage(); }
+  // Shortens text to fit maxW (at whatever font is currently set on doc),
+  // truncating with an ellipsis instead of wrapping — rows here have fixed
+  // heights, so a wrapped second line bled into the row below instead of
+  // just cutting the text off.
+  function fitText(text, maxW) {
+    if (maxW <= 0) return '';
+    if (doc.getTextWidth(text) <= maxW) return text;
+    let t = text;
+    while (t.length > 1 && doc.getTextWidth(t + '…') > maxW) t = t.slice(0, -1);
+    return t + '…';
+  }
 
   // ── HEADER BAND ──
   doc.setFillColor(...GARNET);
@@ -4050,10 +4061,16 @@ function downloadExportPDF() {
     doc.roundedRect(margin, y, contentW, 11, 2, 2, 'F');
     const headerTextIsDark = ci === 1; // Gold background needs dark text, not white
     doc.setTextColor(...(headerTextIsDark ? DARK : [255, 255, 255]));
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
-    doc.text(c.code + '  —  ' + c.name, margin + 4, y + 7.5);
+
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.text(done + '/' + cA.length + ' complete', pageW - margin - 4, y + 7.5, { align: 'right' });
+    const statText = done + '/' + cA.length + ' complete';
+    const statW = doc.getTextWidth(statText);
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.text(fitText(c.code + '  —  ' + c.name, contentW - 8 - statW - 8), margin + 4, y + 7.5);
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text(statText, pageW - margin - 4, y + 7.5, { align: 'right' });
     y += 13;
 
     // Assignment rows
@@ -4067,20 +4084,41 @@ function downloadExportPDF() {
       // colored left stripe
       doc.setFillColor(...col);
       doc.rect(margin, y, 2.5, 7.5, 'F');
+      // Measure date and grade first — they used to sit at two fixed offsets
+      // that were too close together for a real date string, overlapping it.
+      // Now the grade anchors itself to the left of however wide the date
+      // actually is, and the name truncates (not wraps) to whatever's left.
+      let ds = '', dateW = 0;
+      if (a.due_date) {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+        ds = fmtDateTime(a.due_date, a.due_time);
+        dateW = doc.getTextWidth(ds);
+      }
+      const dateRightX = pageW - margin - 3;
+      const gradeRightX = ds ? (dateRightX - dateW - 4) : (pageW - margin - 3);
+
+      const gradeStr = formatGradeDisplay(a);
+      let gradeW = 0;
+      if (gradeStr !== '—') {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+        gradeW = doc.getTextWidth(gradeStr);
+      }
+      const nameRightEdge = gradeStr !== '—' ? (gradeRightX - gradeW - 4) : gradeRightX;
+      const nameMaxW = Math.max(30, nameRightEdge - (margin + 5));
+
       doc.setTextColor(...DARK);
       doc.setFont('helvetica', a.completed ? 'italic' : 'normal'); doc.setFontSize(9);
       const label = (a.completed ? '✓  ' : '   ') + a.name;
-      doc.text(label, margin + 5, y + 5.2, { maxWidth: contentW - 46 });
-      const gradeStr = formatGradeDisplay(a);
+      doc.text(fitText(label, nameMaxW), margin + 5, y + 5.2);
+
       if (gradeStr !== '—') {
         const gradeIsDark = ci === 1; // bright gold on a light row background is hard to read too
         doc.setFont('helvetica', 'bold'); doc.setTextColor(...(gradeIsDark ? DARK : col)); doc.setFontSize(8);
-        doc.text(gradeStr, pageW - margin - 22, y + 5.2, { align: 'right' });
+        doc.text(gradeStr, gradeRightX, y + 5.2, { align: 'right' });
       }
-      if (a.due_date) {
+      if (ds) {
         doc.setFont('helvetica', 'normal'); doc.setTextColor(...GRAY); doc.setFontSize(8);
-        const ds = fmtDateTime(a.due_date, a.due_time);
-        doc.text(ds, pageW - margin - 3, y + 5.2, { align: 'right' });
+        doc.text(ds, dateRightX, y + 5.2, { align: 'right' });
       }
       y += 8;
     });
@@ -4120,12 +4158,20 @@ function downloadExportPDF() {
       doc.rect(margin, y, contentW, 7, 'F');
       doc.setFillColor(...col);
       doc.rect(margin, y, 2.5, 7, 'F');
+      let weekW = 0;
+      if (r.week_label) {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5);
+        weekW = doc.getTextWidth(r.week_label);
+      }
+      const weekRightX = pageW - margin - 3;
+      const titleMaxW = Math.max(30, (r.week_label ? (weekRightX - weekW - 4) : weekRightX) - (margin + 5));
+
       doc.setTextColor(...DARK);
       doc.setFont('helvetica', r.is_read ? 'italic' : 'normal'); doc.setFontSize(8.5);
-      doc.text((r.is_read ? '✓  ' : '   ') + r.title, margin + 5, y + 4.8, { maxWidth: contentW - 24 });
+      doc.text(fitText((r.is_read ? '✓  ' : '   ') + r.title, titleMaxW), margin + 5, y + 4.8);
       if (r.week_label) {
         doc.setTextColor(...GRAY); doc.setFontSize(7.5);
-        doc.text(r.week_label, pageW - margin - 3, y + 4.8, { align: 'right' });
+        doc.text(r.week_label, weekRightX, y + 4.8, { align: 'right' });
       }
       y += 7.5;
     });
@@ -4198,7 +4244,7 @@ function downloadExportPDF() {
   const semAssignmentIds = new Set(pdfSemAssignments.map(a => a.id));
   const exportFeedback = assignmentFeedback.filter(f => f.include_in_export && semAssignmentIds.has(f.assignment_id));
   if (exportFeedback.length) {
-    newPage();
+    checkY(20);
     doc.setFillColor(30, 30, 40);
     doc.roundedRect(margin, y, contentW, 11, 2, 2, 'F');
     doc.setTextColor(255, 255, 255);
