@@ -1587,8 +1587,7 @@ EME6962	Diagnostic Exam (Qualifying)	0	Spring 1"></textarea>
 // CONFIG + STATE
 // ────────────────────────────────────────────────
 let SB_URL = '', SB_KEY = '';
-let courses = [], assignments = [], readings = [], notes = [], milestones = [], semesters = [], connections = [], assignmentFeedback = [];
-let openFeedbackRows = new Set();
+let courses = [], assignments = [], readings = [], notes = [], milestones = [], semesters = [], connections = [];
 let viewingSemesterId = localStorage.getItem('viewing_semester_id') || null;
 let _dayClearedCelebrated = false;
 
@@ -1795,11 +1794,10 @@ async function launch() {
 }
 
 async function loadAll() {
-  [semesters, courses, assignments, readings, notes, milestones, connections, assignmentFeedback] = await Promise.all([
+  [semesters, courses, assignments, readings, notes, milestones, connections] = await Promise.all([
     sbGet('semesters'), sbGet('courses'), sbGet('assignments'),
     sbGet('readings'), sbGet('notes'), sbGet('milestones','order=sort_order.asc'),
-    sbGet('connections','order=sort_order.asc'),
-    sbGet('assignment_feedback')
+    sbGet('connections','order=sort_order.asc')
   ]);
 }
 
@@ -2927,7 +2925,7 @@ function renderGrades() {
     // Three independent schemes, matched to whatever each assignment actually has:
     // points-based ("87 / 100 pts"), weight-based ("92% of a 20%-weight item"),
     // or pass/fail (marked Complete / Incomplete, no points or %).
-    const cAssign = assignments.filter(a => a.course_id === c.id);
+    const cAssign = assignments.filter(a => a.course_id === c.id && (a.points || a.weight || a.pass_fail));
     const ptsAssign = cAssign.filter(a => a.points);
     const wAssign = cAssign.filter(a => a.weight && !a.points);
     const pfAssign = cAssign.filter(a => a.pass_fail);
@@ -2965,8 +2963,7 @@ function renderGrades() {
     function gradeRow(a) {
       const isPts = !!a.points;
       const isPF = !!a.pass_fail;
-      const isWeighted = !isPts && !isPF && !!a.weight;
-      const colLabel = isPF ? 'P/F' : isPts ? `${a.points} pts` : isWeighted ? `${a.weight}%` : '—';
+      const colLabel = isPF ? 'P/F' : isPts ? `${a.points} pts` : `${a.weight}%`;
       let inputCell;
       if (isPF) {
         const isComplete = a.grade === 1;
@@ -2980,56 +2977,18 @@ function renderGrades() {
              <input class="grade-input" type="number" min="0" max="${a.points}" value="${a.grade ?? ''}" placeholder="—" onchange="saveGrade('${a.id}', this.value)" style="width:56px">
              <span style="font-size:11px;color:var(--text3)">/ ${a.points}</span>
            </div>`;
-      } else if (isWeighted) {
+      } else {
         inputCell = `<div style="display:flex;align-items:center;gap:3px;justify-content:center">
              <input class="grade-input" type="number" min="0" max="100" value="${a.grade ?? ''}" placeholder="—" onchange="saveGrade('${a.id}', this.value)" style="width:56px">
              <span style="font-size:11px;color:var(--text3)">%</span>
            </div>`;
-      } else {
-        inputCell = `<span style="font-size:11px;color:var(--text3)">No grade item</span>`;
       }
-
-      const fbEntries = feedbackForAssignment(a.id);
-      const fbOpen = openFeedbackRows.has(a.id);
-      const fbCell = `<button class="btn btn-sm btn-secondary" onclick="toggleFeedbackRow('${a.id}')" style="padding:4px 8px;position:relative" title="Feedback">
-           <i class="ti ti-message-2"></i>${fbEntries.length ? `<span style="position:absolute;top:-5px;right:-5px;background:#782F40;color:#fff;border-radius:999px;font-size:9px;line-height:1;padding:2px 4px;min-width:14px;text-align:center">${fbEntries.length}</span>` : ''}
-         </button>`;
-
-      const mainRow = `<tr class="${isDueToday(a.due_date) ? 'due-today' : ''}">
+      return `<tr class="${isDueToday(a.due_date) ? 'due-today' : ''}">
         <td>${a.name}</td>
         <td class="hide-mobile">${fmtDateTime(a.due_date, a.due_time)}</td>
         <td>${colLabel}</td>
         <td>${inputCell}</td>
-        <td style="text-align:center">${fbCell}</td>
       </tr>`;
-
-      if (!fbOpen) return mainRow;
-
-      const entriesHtml = fbEntries.length
-        ? fbEntries.map(f => {
-            const dt = new Date(f.created_at);
-            return `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
-              <div style="flex:1">
-                <div style="font-size:13px;white-space:pre-wrap">${f.body}</div>
-                <div style="font-size:10px;color:var(--text3);margin-top:3px">${dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
-              </div>
-              <button class="btn btn-sm btn-secondary" onclick="deleteFeedback('${f.id}', '${a.id}')" style="padding:2px 8px;height:fit-content" title="Delete"><i class="ti ti-x"></i></button>
-            </div>`;
-          }).join('')
-        : `<div style="font-size:12px;color:var(--text3);padding:6px 0">No feedback logged yet</div>`;
-
-      const detailRow = `<tr class="feedback-detail-row">
-        <td colspan="5" style="background:var(--surface2);padding:10px 14px">
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Feedback — ${a.name}</div>
-          ${entriesHtml}
-          <div style="display:flex;gap:6px;margin-top:8px">
-            <textarea id="fbInput-${a.id}" rows="2" placeholder="Paste or type feedback you received on this one…" style="flex:1;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></textarea>
-            <button class="btn btn-sm btn-primary" onclick="addFeedback('${a.id}')" style="align-self:flex-end">Add</button>
-          </div>
-        </td>
-      </tr>`;
-
-      return mainRow + detailRow;
     }
 
     const sortedAssign = [...cAssign].sort((a,b) => {
@@ -3047,40 +3006,13 @@ function renderGrades() {
         ${avgHtml}
       </div>
       <table class="tbl">
-        <thead><tr><th>Assignment</th><th class="hide-mobile" style="width:80px">Due</th><th style="width:90px">Out of</th><th style="width:140px">Your Grade</th><th style="width:50px"></th></tr></thead>
+        <thead><tr><th>Assignment</th><th class="hide-mobile" style="width:80px">Due</th><th style="width:90px">Out of</th><th style="width:140px">Your Grade</th></tr></thead>
         <tbody>
-          ${sortedAssign.length ? sortedAssign.map(gradeRow).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text3)">No assignments yet</td></tr>'}
+          ${sortedAssign.length ? sortedAssign.map(gradeRow).join('') : '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3)">No graded-item assignments yet</td></tr>'}
         </tbody>
       </table>
     </div>`;
   }).join('');
-}
-
-// ── ASSIGNMENT FEEDBACK ───────────────────────────
-function feedbackForAssignment(assignmentId) {
-  return assignmentFeedback.filter(f => f.assignment_id === assignmentId)
-    .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
-}
-function toggleFeedbackRow(assignmentId) {
-  if (openFeedbackRows.has(assignmentId)) openFeedbackRows.delete(assignmentId);
-  else openFeedbackRows.add(assignmentId);
-  renderGrades();
-}
-async function addFeedback(assignmentId) {
-  const el = document.getElementById(`fbInput-${assignmentId}`);
-  const body = el ? el.value.trim() : '';
-  if (!body) return;
-  const [saved] = await sb('POST', 'assignment_feedback', { assignment_id: assignmentId, body });
-  if (saved) assignmentFeedback.push(saved);
-  openFeedbackRows.add(assignmentId);
-  renderGrades();
-  showToast('Feedback added');
-}
-async function deleteFeedback(feedbackId, assignmentId) {
-  await sbDelete('assignment_feedback', feedbackId);
-  assignmentFeedback = assignmentFeedback.filter(f => f.id !== feedbackId);
-  openFeedbackRows.add(assignmentId);
-  renderGrades();
 }
 
 async function saveGrade(id, val) {
