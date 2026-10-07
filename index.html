@@ -1795,12 +1795,18 @@ async function launch() {
 }
 
 async function loadAll() {
-  [semesters, courses, assignments, readings, notes, milestones, connections, assignmentFeedback] = await Promise.all([
+  const loaded = await Promise.all([
     sbGet('semesters'), sbGet('courses'), sbGet('assignments'),
     sbGet('readings'), sbGet('notes'), sbGet('milestones','order=sort_order.asc'),
     sbGet('connections','order=sort_order.asc'),
     sbGet('assignment_feedback')
   ]);
+  // Guard against a table that errors instead of returning rows (e.g. a brand-new
+  // table Supabase's API hasn't picked up yet) — sbGet doesn't check res.ok, so a
+  // failed fetch resolves to an error object, not an array. Without this, one bad
+  // table silently breaks every page that reads it instead of just showing empty.
+  [semesters, courses, assignments, readings, notes, milestones, connections, assignmentFeedback] =
+    loaded.map(r => Array.isArray(r) ? r : []);
 }
 
 async function seedData() {
