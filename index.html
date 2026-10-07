@@ -3017,7 +3017,13 @@ function renderGrades() {
             return `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
               <div style="flex:1">
                 <div style="font-size:13px;white-space:pre-wrap">${f.body}</div>
-                <div style="font-size:10px;color:var(--text3);margin-top:3px">${dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+                <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+                  <span style="font-size:10px;color:var(--text3)">${dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+                  <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3);cursor:pointer">
+                    <input type="checkbox" ${f.include_in_export ? 'checked' : ''} onchange="toggleFeedbackExport('${f.id}', this.checked)" style="width:auto;margin:0">
+                    Include in export
+                  </label>
+                </div>
               </div>
               <button class="btn btn-sm btn-secondary" onclick="deleteFeedback('${f.id}', '${a.id}')" style="padding:2px 8px;height:fit-content" title="Delete"><i class="ti ti-x"></i></button>
             </div>`;
@@ -3087,6 +3093,16 @@ async function deleteFeedback(feedbackId, assignmentId) {
   assignmentFeedback = assignmentFeedback.filter(f => f.id !== feedbackId);
   openFeedbackRows.add(assignmentId);
   renderGrades();
+}
+async function toggleFeedbackExport(feedbackId, checked) {
+  try {
+    await sbPatch('assignment_feedback', feedbackId, { include_in_export: checked });
+    const f = assignmentFeedback.find(x => x.id === feedbackId);
+    if (f) f.include_in_export = checked;
+  } catch (e) {
+    console.error(e);
+    showToast('Could not save — run assignment_feedback_export_flag.sql first');
+  }
 }
 
 async function saveGrade(id, val) {
@@ -4161,6 +4177,59 @@ function downloadExportPDF() {
       if (n.tags) {
         doc.setTextColor(...GRAY); doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5);
         doc.text(n.tags, margin + 6, y + blockH - 2);
+      }
+
+      y += blockH + 4;
+    });
+  }
+
+  // ── ASSIGNMENT FEEDBACK (flagged for export) ──
+  const semAssignmentIds = new Set(pdfSemAssignments.map(a => a.id));
+  const exportFeedback = assignmentFeedback.filter(f => f.include_in_export && semAssignmentIds.has(f.assignment_id));
+  if (exportFeedback.length) {
+    newPage();
+    doc.setFillColor(30, 30, 40);
+    doc.roundedRect(margin, y, contentW, 11, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.text('Feedback', margin + 4, y + 7.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text(exportFeedback.length + ' entr' + (exportFeedback.length === 1 ? 'y' : 'ies'), pageW - margin - 4, y + 7.5, { align: 'right' });
+    y += 14;
+
+    const sortedFb = [...exportFeedback].sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+    sortedFb.forEach(f => {
+      const fa = assignments.find(x => x.id === f.assignment_id);
+      const fc = fa ? courseById(fa.course_id) : null;
+      const fci = fc ? semCourses.findIndex(x => x.id === fc.id) : -1;
+      const col = fci >= 0 ? courseColors[fci] : [80, 80, 90];
+      const bodyLines = doc.splitTextToSize((f.body || '').replace(/[\r\n]+/g, ' '), contentW - 8);
+      const blockH = 8 + Math.min(bodyLines.length, 6) * 4.5;
+      checkY(blockH + 4);
+
+      doc.setFillColor(250, 248, 245);
+      doc.setDrawColor(...LGRAY); doc.setLineWidth(0.3);
+      doc.roundedRect(margin, y, contentW, blockH, 2, 2, 'FD');
+      doc.setFillColor(...col);
+      doc.roundedRect(margin, y, 3, blockH, 2, 2, 'F');
+
+      doc.setTextColor(...DARK); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+      doc.text(fa ? fa.name : 'Assignment', margin + 6, y + 5.5, { maxWidth: contentW - 55 });
+
+      const fdt = new Date(f.created_at);
+      const meta = [
+        fc ? fc.code : '',
+        fdt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      ].filter(Boolean).join('  ·  ');
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(...GRAY); doc.setFontSize(7.5);
+      doc.text(meta, pageW - margin - 4, y + 5.5, { align: 'right' });
+
+      doc.setTextColor(...DARK); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+      const visLines = bodyLines.slice(0, 6);
+      visLines.forEach((line, li) => doc.text(line, margin + 6, y + 10 + li * 4.5));
+      if (bodyLines.length > 6) {
+        doc.setTextColor(...GRAY); doc.setFontSize(8);
+        doc.text('…', margin + 6, y + 10 + 6 * 4.5);
       }
 
       y += blockH + 4;
