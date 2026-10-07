@@ -3081,18 +3081,29 @@ function toggleFeedbackRow(assignmentId) {
 async function addFeedback(assignmentId) {
   const el = document.getElementById(`fbInput-${assignmentId}`);
   const body = el ? el.value.trim() : '';
-  if (!body) return;
-  const [saved] = await sb('POST', 'assignment_feedback', { assignment_id: assignmentId, body });
-  if (saved) assignmentFeedback.push(saved);
-  openFeedbackRows.add(assignmentId);
-  renderGrades();
-  showToast('Feedback added');
+  if (!body) { showToast('Type something first'); return; }
+  try {
+    const [saved] = await sb('POST', 'assignment_feedback', { assignment_id: assignmentId, body });
+    if (saved) assignmentFeedback.push(saved);
+    openFeedbackRows.add(assignmentId);
+    renderGrades();
+    showToast('Feedback added');
+  } catch (e) {
+    console.error(e);
+    showToast('Could not save: ' + (e.message || 'unknown error — check the console'));
+  }
 }
 async function deleteFeedback(feedbackId, assignmentId) {
-  await sbDelete('assignment_feedback', feedbackId);
-  assignmentFeedback = assignmentFeedback.filter(f => f.id !== feedbackId);
-  openFeedbackRows.add(assignmentId);
-  renderGrades();
+  try {
+    const ok = await sbDelete('assignment_feedback', feedbackId);
+    if (!ok) { showToast('Could not delete — check the console'); return; }
+    assignmentFeedback = assignmentFeedback.filter(f => f.id !== feedbackId);
+    openFeedbackRows.add(assignmentId);
+    renderGrades();
+  } catch (e) {
+    console.error(e);
+    showToast('Could not delete: ' + (e.message || 'unknown error — check the console'));
+  }
 }
 async function toggleFeedbackExport(feedbackId, checked) {
   try {
