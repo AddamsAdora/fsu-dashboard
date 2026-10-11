@@ -1292,7 +1292,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <div class="form-row"><div><label>Citation / Author(s)</label><input type="text" id="readCitation" placeholder="Author, A. (2024). Title. Journal, 12(3), 45–67."></div></div>
     <div class="form-row cols2">
       <div><label>Course</label><select id="readCourse"></select></div>
-      <div><label>Week / Module</label><input type="text" id="readWeek" placeholder="Week 3"></div>
+      <div><label>Week / Module</label><input type="text" id="readWeek" placeholder="Week 3  (textbook spanning weeks? try: Week 2-7)"></div>
     </div>
     <div class="form-row"><div><label>URL (optional)</label><input type="url" id="readUrl" placeholder="https://..."></div></div>
     <div class="modal-footer">
@@ -1312,7 +1312,7 @@ label { font-size: 11px; font-weight: 700; color: var(--text3); display: block; 
     <div class="form-row"><div><label>Title</label><input type="text" id="noteTitle" placeholder="Note title"></div></div>
     <div class="form-row cols2">
       <div><label>Course (optional)</label><select id="noteCourse"><option value="">— No course —</option></select><div id="noteSemesterLabel" style="font-size:11px;color:var(--text3);margin-top:4px"></div></div>
-      <div><label>Module / Week</label><select id="noteModule"><option value="">— Select —</option></select></div>
+      <div><label>Module / Week</label><input type="text" id="noteModule" list="noteModuleList" placeholder="Week 3"><datalist id="noteModuleList"></datalist></div>
     </div>
     <div class="form-row"><div><label>Body</label><textarea id="noteBody" rows="8" placeholder="Your notes…"></textarea></div></div>
     <div class="form-row"><div><label>Tags (comma-separated)</label><input type="text" id="noteTags" placeholder="cognition, proposal, week3"></div></div>
@@ -2864,6 +2864,26 @@ async function deleteReading() {
 }
 
 // ── TIMELINE ─────────────────────────────────────
+// A reading's Week/Module field is free text, so one entry (e.g. a textbook
+// covering several weeks) can list more than one week — comma/semicolon
+// separated ("Week 2, Week 3") or a range ("Week 2-7") — and it'll count
+// toward every week it names, instead of only the first.
+function weekLabelMatchesWeek(label, wNum) {
+  if (!label) return false;
+  return label.toLowerCase().split(/[,;]/).some(part => {
+    part = part.trim();
+    if (!part) return false;
+    const range = part.match(/(\d+)\s*-\s*(\d+)/);
+    if (range) {
+      const lo = parseInt(range[1], 10), hi = parseInt(range[2], 10);
+      if (!isNaN(lo) && !isNaN(hi) && wNum >= lo && wNum <= hi) return true;
+    }
+    return part.includes(wNum.toString()) ||
+           part.includes('week ' + wNum) ||
+           part.includes('module ' + wNum) ||
+           part.includes('unit ' + wNum);
+  });
+}
 function renderTimeline() {
   const curSem = getViewingSemester();
   const start = curSem.start_date ? new Date(curSem.start_date + 'T12:00:00') : new Date('2026-05-12');
@@ -2885,9 +2905,7 @@ function renderTimeline() {
     }).sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
     const wR = readings.filter(r => {
       if (!r.week_label || !semCourseIds.has(r.course_id)) return false;
-      return r.week_label.toLowerCase().includes(wNum.toString()) ||
-             r.week_label.toLowerCase().includes('week ' + wNum) ||
-             r.week_label.toLowerCase().includes('module ' + wNum);
+      return weekLabelMatchesWeek(r.week_label, wNum);
     });
     weeks.push({ num: wNum, start: wStart, end: wEnd, isCurrent, deadlines: wDl, readings: wR });
     d.setDate(d.getDate() + 7);
@@ -3166,19 +3184,17 @@ function renderNotes() {
 
 function setNoteFilter(f) { currentNoteFilter = f === 'All' ? 'all' : f; renderNotes(); }
 
-function getModulesForCourse(courseId) {
-  const c = courseById(courseId);
-  if (!c || !c.code) return [];
-  if (c.code.startsWith('EDF')) return ['Module 1','Module 2','Module 3','Module 4','Module 5','Module 6','Module 7','Module 8','Module 9'];
-  if (c.code.startsWith('EDG')) return ['Week 1','Week 2','Week 3','Week 4','Week 5','Week 6','Week 7','Week 8','Week 9','Week 10'];
-  if (c.code.startsWith('EME')) return ['Unit 1','Unit 2','Unit 3','Unit 4','Unit 5'];
-  return ['Week 1','Week 2','Week 3','Week 4','Week 5','Week 6','Week 7','Week 8'];
-}
 function populateNoteModules(courseId, currentVal) {
-  const sel = document.getElementById('noteModule');
-  if (!sel) return;
-  const mods = getModulesForCourse(courseId);
-  sel.innerHTML = '<option value="">— Select —</option>' + mods.map(m => `<option value="${m}" ${m===currentVal?'selected':''}>${m}</option>`).join('');
+  const input = document.getElementById('noteModule');
+  const dl = document.getElementById('noteModuleList');
+  if (!input) return;
+  // Suggest the module/week labels actually used for this course, drawn from
+  // its real notes and readings — not a hardcoded per-prefix guess.
+  const labels = new Set();
+  notes.forEach(n => { if (n.course_id === courseId && n.module_label) labels.add(n.module_label); });
+  readings.forEach(r => { if (r.course_id === courseId && r.week_label) labels.add(r.week_label); });
+  if (dl) dl.innerHTML = [...labels].sort().map(m => `<option value="${m}"></option>`).join('');
+  input.value = currentVal || '';
 }
 let _noteReturnToAssignment = null;
 
